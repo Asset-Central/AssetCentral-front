@@ -1,0 +1,75 @@
+:root {
+  /* ── Colores primarios ── */
+  --color-primary:        #2563eb;
+  --color-primary-light:  #3b82f6;
+  --color-primary-dark:   #1d4ed8;
+
+  /* ── Superficies ── */
+  --color-bg:             #0f1117;
+  --color-surface:        #1a1d27;
+  --color-surface-raised: #232638;
+  --color-border:         #2e3150;
+
+  /* ── Texto ── */
+  --color-text:           #f1f5f9;
+  --color-text-muted:     #94a3b8;
+  --color-text-subtle:    #64748b;
+
+  /* ── Semánticos ── */
+  --color-success:  #22c55e;
+  --color-danger:   #ef4444;
+  --color-warning:  #f59e0b;
+  --color-info:     #38bdf8;
+
+  /* ── Tipos de activo ── */
+  --color-cedear:   #818cf8;
+  --color-bono:     #34d399;
+  --color-fci:      #fb923c;
+  --color-usd:      #facc15;
+  --color-accion:   #f472b6;
+  --color-crypto:   #60a5fa;
+
+  /* ── Espaciado ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Tipografía ── */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+
+  /* ── Bordes ── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ── Sombras ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+  /* ── Transiciones ── */
+  --transition-fast:   150ms ease;
+  --transition-normal: 250ms ease;
+
+  /* ── Layout ── */
+  --nav-width:      240px;
+  --header-height:  60px;
+}
