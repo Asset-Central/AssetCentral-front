@@ -180,6 +180,7 @@ export class AcLogin extends LitElement {
   @state() private _mode: Mode = 'login';
   @state() private _email = '';
   @state() private _password = '';
+  @state() private _confirm = '';
   @state() private _nombre = '';
   @state() private _apellido = '';
   @state() private _dni = '';
@@ -187,11 +188,14 @@ export class AcLogin extends LitElement {
   @state() private _googleLoading = false;
   @state() private _error = '';
   @state() private _success = '';
+  /** Email al que ya se envió confirmación en esta sesión */
+  private _pendingEmail = '';
 
   private _setMode(mode: Mode) {
     this._mode = mode;
     this._error = '';
     this._success = '';
+    this._confirm = '';
   }
 
   private async _submit(e: Event) {
@@ -208,13 +212,29 @@ export class AcLogin extends LitElement {
         Router.go('/dashboard');
       }
     } else {
+      // Validar contraseñas antes de llamar a Supabase
+      if (this._password !== this._confirm) {
+        this._error = 'Las contraseñas no coinciden.';
+        this._loading = false;
+        return;
+      }
+      // Evitar reenvío si ya se mandó confirmación a este email en la sesión
+      if (this._pendingEmail && this._email === this._pendingEmail) {
+        this._error = `Ya enviamos un email de confirmación a ${this._email}. Revisá tu bandeja de entrada (y spam).`;
+        this._loading = false;
+        return;
+      }
       const result = await signUp(this._email, this._password, this._nombre, this._apellido, this._dni);
-      if (result.error) {
+      if (result.error === 'EMAIL_ALREADY_PENDING') {
+        this._error = `Ya existe una cuenta pendiente de confirmación para ${this._email}. Revisá tu bandeja de entrada (y spam).`;
+      } else if (result.error) {
         this._error = result.error;
       } else if (!result.session) {
-        this._success = 'Revisá tu email para confirmar tu cuenta.';
+        this._pendingEmail = this._email;
+        this._success = `Te enviamos un email a ${this._email}. Confirmá tu cuenta para continuar.`;
         this._email = '';
         this._password = '';
+        this._confirm = '';
         this._nombre = '';
         this._apellido = '';
         this._dni = '';
@@ -339,6 +359,20 @@ export class AcLogin extends LitElement {
               autocomplete="${isLogin ? 'current-password' : 'new-password'}"
             />
           </label>
+          ${!isLogin ? html`
+            <label>
+              Confirmar contraseña
+              <input
+                type="password"
+                placeholder="Repetí tu contraseña"
+                .value="${this._confirm}"
+                @input="${(e: InputEvent) => (this._confirm = (e.target as HTMLInputElement).value)}"
+                required
+                minlength="6"
+                autocomplete="new-password"
+              />
+            </label>
+          ` : ''}
           <button class="submit-btn" type="submit" ?disabled="${this._loading || this._googleLoading}">
             ${this._loading
               ? (isLogin ? 'Ingresando...' : 'Creando cuenta...')

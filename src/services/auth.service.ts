@@ -30,6 +30,11 @@ export async function signUp(
       data: { nombre, apellido, dni, full_name: `${nombre} ${apellido}` },
     },
   });
+  // Supabase devuelve éxito falso con identities=[] cuando el email ya existe
+  // pero no fue confirmado aún (prevención de enumeración de emails)
+  if (!error && data.user?.identities?.length === 0) {
+    return { session: null, user: null, error: 'EMAIL_ALREADY_PENDING' };
+  }
   return {
     session: data.session,
     user: data.user,
