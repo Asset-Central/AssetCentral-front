@@ -7,13 +7,12 @@ import type { Asset, AssetType } from '@/types/asset';
 Chart.register(ArcElement, DoughnutController, Tooltip, Legend);
 
 const TYPE_COLORS: Record<AssetType, string> = {
-  CEDEAR:  '#818cf8',
-  BONO:    '#34d399',
-  FCI:     '#fb923c',
-  USD:     '#facc15',
-  ACCION:  '#f472b6',
-  CRYPTO:  '#60a5fa',
-  OTRO:    '#94a3b8',
+  cedear: '#818cf8',
+  bono:   '#34d399',
+  fci:    '#fb923c',
+  cash:   '#facc15',
+  stock:  '#f472b6',
+  crypto: '#60a5fa',
 };
 
 @customElement('ac-distribution-chart')
@@ -41,10 +40,10 @@ export class AcDistributionChart extends LitElement {
   private _renderChart() {
     const groups = groupByType(this.assets);
     const data = {
-      labels: groups.map((g) => g.type),
+      labels: groups.map((g) => g.type.toUpperCase()),
       datasets: [{
-        data: groups.map((g) => g.totalArs),
-        backgroundColor: groups.map((g) => TYPE_COLORS[g.type]),
+        data: groups.map((g) => g.total_valuation),
+        backgroundColor: groups.map((g) => TYPE_COLORS[g.type] ?? '#94a3b8'),
         borderWidth: 0,
         hoverOffset: 4,
       }],

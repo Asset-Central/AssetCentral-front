@@ -1,26 +1,27 @@
-export type AssetType = 'CEDEAR' | 'BONO' | 'FCI' | 'USD' | 'ACCION' | 'CRYPTO' | 'OTRO';
+import type { Platform } from './account';
 
-export type Platform = 'COCOS' | 'IOL' | 'MERCADO_PAGO' | 'PROMETEO';
+export type AssetType = 'cedear' | 'bono' | 'fci' | 'cash' | 'crypto' | 'stock';
+
+export type Currency = 'ARS' | 'USD';
+
+export { Platform };
 
 export interface Asset {
-  id: string;
   ticker: string;
-  name: string;
-  type: AssetType;
-  platform: Platform;
+  name?: string;
+  asset_type?: AssetType;
+  platform?: Platform;
+  currency?: Currency;
+  account_id: string;
   quantity: number;
-  priceArs: number;
-  priceUsd?: number;
-  totalArs: number;
-  totalUsd?: number;
-  /** Variación porcentual del día */
-  dailyChangePercent: number;
+  unit_price?: number;
+  total_valuation?: number;
+  recorded_at?: string;
 }
 
 export interface AssetGroup {
   type: AssetType;
-  totalArs: number;
-  totalUsd?: number;
+  total_valuation: number;
   percentage: number;
   assets: Asset[];
 }

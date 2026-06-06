@@ -1,12 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { LinkedAccount } from '@/types/account';
+import type { Account, ConnectionStatus } from '@/types/account';
 
-const STATUS_LABEL: Record<LinkedAccount['status'], string> = {
-  CONNECTED:    'Conectada',
-  ERROR:        'Error',
-  PENDING:      'Sincronizando...',
-  DISCONNECTED: 'Desconectada',
+const STATUS_LABEL: Record<ConnectionStatus, string> = {
+  active:                    'Activa',
+  error:                     'Error',
+  requires_reauthentication: 'Requiere reauth.',
 };
 
 @customElement('ac-account-card')
@@ -28,14 +27,12 @@ export class AcAccountCard extends LitElement {
       padding: 2px var(--space-2); border-radius: var(--radius-full);
     }
     .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .CONNECTED    .dot { background: var(--color-success); }
-    .ERROR        .dot { background: var(--color-danger); }
-    .PENDING      .dot { background: var(--color-warning); }
-    .DISCONNECTED .dot { background: var(--color-text-subtle); }
-    .CONNECTED    { color: var(--color-success); }
-    .ERROR        { color: var(--color-danger); }
-    .PENDING      { color: var(--color-warning); }
-    .DISCONNECTED { color: var(--color-text-subtle); }
+    .active .dot                    { background: var(--color-success); }
+    .error .dot                     { background: var(--color-danger); }
+    .requires_reauthentication .dot { background: var(--color-warning); }
+    .active                    { color: var(--color-success); }
+    .error                     { color: var(--color-danger); }
+    .requires_reauthentication { color: var(--color-warning); }
     .actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
     button {
       font-size: var(--text-xs); padding: var(--space-1) var(--space-3);
@@ -47,7 +44,7 @@ export class AcAccountCard extends LitElement {
     button.danger:hover { color: var(--color-danger); border-color: var(--color-danger); }
   `;
 
-  @property({ type: Object }) account!: LinkedAccount;
+  @property({ type: Object }) account!: Account;
 
   private _unlink() {
     this.dispatchEvent(new CustomEvent('ac-unlink', { detail: this.account, bubbles: true, composed: true }));
@@ -58,17 +55,17 @@ export class AcAccountCard extends LitElement {
   }
 
   render() {
-    const { platform, label, status, lastSyncAt } = this.account;
-    const syncDate = lastSyncAt ? new Date(lastSyncAt).toLocaleString('es-AR') : 'Nunca';
+    const { platform, label, connection_status, last_sync } = this.account;
+    const syncDate = last_sync ? new Date(last_sync).toLocaleString('es-AR') : 'Nunca';
     return html`
       <div class="row">
         <div>
           <div class="platform">${platform}</div>
-          <div class="label">${label} · Última sync: ${syncDate}</div>
+          <div class="label">${label ?? ''} · Última sync: ${syncDate}</div>
         </div>
-        <span class="status ${status}">
+        <span class="status ${connection_status}">
           <span class="dot"></span>
-          ${STATUS_LABEL[status]}
+          ${STATUS_LABEL[connection_status]}
         </span>
       </div>
       <div class="actions">

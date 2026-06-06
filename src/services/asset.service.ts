@@ -9,21 +9,22 @@ export async function fetchAssets(): Promise<Asset[]> {
 }
 
 export function groupByType(assets: Asset[]): AssetGroup[] {
-  const totalArs = assets.reduce((sum, a) => sum + a.totalArs, 0);
+  const totalAll = assets.reduce((sum, a) => sum + (a.total_valuation ?? 0), 0);
 
   const map = new Map<AssetType, Asset[]>();
   for (const asset of assets) {
-    const group = map.get(asset.type) ?? [];
+    const type: AssetType = asset.asset_type ?? 'stock';
+    const group = map.get(type) ?? [];
     group.push(asset);
-    map.set(asset.type, group);
+    map.set(type, group);
   }
 
   return Array.from(map.entries()).map(([type, items]) => {
-    const groupTotal = items.reduce((sum, a) => sum + a.totalArs, 0);
+    const groupTotal = items.reduce((sum, a) => sum + (a.total_valuation ?? 0), 0);
     return {
       type,
-      totalArs: groupTotal,
-      percentage: totalArs > 0 ? (groupTotal / totalArs) * 100 : 0,
+      total_valuation: groupTotal,
+      percentage: totalAll > 0 ? (groupTotal / totalAll) * 100 : 0,
       assets: items,
     };
   });

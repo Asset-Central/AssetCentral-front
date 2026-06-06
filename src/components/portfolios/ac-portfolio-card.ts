@@ -20,8 +20,6 @@ export class AcPortfolioCard extends LitElement {
     .stats { display: flex; gap: var(--space-6); margin-top: var(--space-4); }
     .stat-label { font-size: var(--text-xs); color: var(--color-text-subtle); }
     .stat-value { font-family: var(--font-mono); font-weight: 600; font-size: var(--text-sm); }
-    .positive { color: var(--color-success); }
-    .negative { color: var(--color-danger); }
   `;
 
   @property({ type: Object }) summary!: PortfolioSummary;
@@ -31,10 +29,8 @@ export class AcPortfolioCard extends LitElement {
   }
 
   render() {
-    const { portfolio, totalArs, dailyChangePercent } = this.summary;
-    const fmtArs = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(totalArs);
-    const sign = dailyChangePercent >= 0 ? '+' : '';
-    const cls = dailyChangePercent >= 0 ? 'positive' : 'negative';
+    const { portfolio, total_ars, total_usd, assets } = this.summary;
+    const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
     return html`
       <div @click="${this._navigate}">
@@ -42,16 +38,16 @@ export class AcPortfolioCard extends LitElement {
         ${portfolio.description ? html`<div class="desc">${portfolio.description}</div>` : ''}
         <div class="stats">
           <div>
-            <div class="stat-label">Valuación</div>
-            <div class="stat-value">${fmtArs}</div>
+            <div class="stat-label">ARS</div>
+            <div class="stat-value">$ ${fmt.format(total_ars)}</div>
           </div>
           <div>
-            <div class="stat-label">Variación diaria</div>
-            <div class="stat-value ${cls}">${sign}${dailyChangePercent.toFixed(2)}%</div>
+            <div class="stat-label">USD</div>
+            <div class="stat-value">U$ ${fmt.format(total_usd)}</div>
           </div>
           <div>
             <div class="stat-label">Activos</div>
-            <div class="stat-value">${this.summary.assets.length}</div>
+            <div class="stat-value">${assets.length}</div>
           </div>
         </div>
       </div>

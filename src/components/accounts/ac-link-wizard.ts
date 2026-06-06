@@ -77,7 +77,7 @@ export class AcLinkWizard extends LitElement {
         ${this._platforms.map(
           (p) => html`
             <button class="platform-btn" @click="${() => this._select(p)}">
-              ${p.displayName}
+              ${p.display_name}
             </button>
           `
         )}

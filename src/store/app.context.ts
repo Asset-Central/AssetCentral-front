@@ -1,17 +1,17 @@
 import { createContext } from '@lit-labs/context';
 import type { Asset } from '@/types/asset';
-import type { LinkedAccount } from '@/types/account';
+import type { Account } from '@/types/account';
 import type { Portfolio } from '@/types/portfolio';
 
 export interface AppState {
   assets: Asset[];
-  accounts: LinkedAccount[];
+  accounts: Account[];
   portfolios: Portfolio[];
   isLoading: boolean;
   error: string | null;
-  /** Valor total consolidado en ARS */
+  /** Valuación total en ARS (activos con currency === 'ARS') */
   totalArs: number;
-  /** Valor total consolidado en USD */
+  /** Valuación total en USD (activos con currency === 'USD') */
   totalUsd: number;
 }
 

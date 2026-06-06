@@ -35,36 +35,40 @@ export class AcAssetCard extends LitElement {
       font-weight: 600;
       text-align: right;
     }
-    .change {
+    .currency-badge {
       font-size: var(--text-xs);
       font-family: var(--font-mono);
       text-align: right;
       margin-top: 2px;
+      color: var(--color-text-muted);
     }
-    .positive { color: var(--color-success); }
-    .negative { color: var(--color-danger); }
   `;
 
   @property({ type: Object }) asset!: Asset;
 
   render() {
-    const { ticker, name, type, totalArs, dailyChangePercent } = this.asset;
-    const sign = dailyChangePercent >= 0 ? '+' : '';
-    const cls = dailyChangePercent >= 0 ? 'positive' : 'negative';
-    const fmtArs = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(totalArs);
+    const { ticker, name, asset_type, unit_price, total_valuation, currency, quantity } = this.asset;
+
+    const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+    const fmtTotal = total_valuation != null
+      ? `${currency ?? ''} ${fmt.format(total_valuation)}`
+      : '—';
+    const fmtPrice = unit_price != null
+      ? `${currency ?? ''} ${fmt.format(unit_price)} × ${fmt.format(quantity)}`
+      : `${fmt.format(quantity)} unidades`;
 
     return html`
       <div class="row">
         <div class="left">
-          <ac-asset-type-badge .type="${type}"></ac-asset-type-badge>
+          <ac-asset-type-badge .type="${asset_type ?? 'stock'}"></ac-asset-type-badge>
           <div>
             <div class="ticker">${ticker}</div>
-            <div class="name">${name}</div>
+            <div class="name">${name ?? ''}</div>
           </div>
         </div>
         <div>
-          <div class="total">${fmtArs}</div>
-          <div class="change ${cls}">${sign}${dailyChangePercent.toFixed(2)}%</div>
+          <div class="total">${fmtTotal}</div>
+          <div class="currency-badge">${fmtPrice}</div>
         </div>
       </div>
     `;

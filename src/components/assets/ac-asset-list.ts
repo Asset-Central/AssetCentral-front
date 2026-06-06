@@ -4,7 +4,7 @@ import type { Asset, AssetType } from '@/types/asset';
 import './ac-asset-card';
 import '@/components/common/ac-empty-state';
 
-const ALL_TYPES: AssetType[] = ['CEDEAR', 'BONO', 'FCI', 'USD', 'ACCION', 'CRYPTO', 'OTRO'];
+const ALL_TYPES: AssetType[] = ['cedear', 'bono', 'fci', 'cash', 'crypto', 'stock'];
 
 @customElement('ac-asset-list')
 export class AcAssetList extends LitElement {
@@ -61,9 +61,11 @@ export class AcAssetList extends LitElement {
 
   private get _filtered(): Asset[] {
     return this.assets.filter((a) => {
-      const matchType = !this._activeType || a.type === this._activeType;
+      const matchType = !this._activeType || a.asset_type === this._activeType;
       const q = this._query.toLowerCase();
-      const matchQuery = !q || a.ticker.toLowerCase().includes(q) || a.name.toLowerCase().includes(q);
+      const matchQuery = !q
+        || a.ticker.toLowerCase().includes(q)
+        || (a.name ?? '').toLowerCase().includes(q);
       return matchType && matchQuery;
     });
   }

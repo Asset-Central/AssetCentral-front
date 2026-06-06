@@ -1,8 +1,8 @@
-import type { LinkedAccount, PlatformConfig } from '@/types/account';
+import type { Account, PlatformConfig } from '@/types/account';
 
 const BASE = '/api/accounts';
 
-export async function fetchAccounts(): Promise<LinkedAccount[]> {
+export async function fetchAccounts(): Promise<Account[]> {
   const res = await fetch(BASE);
   if (!res.ok) throw new Error(`Error fetching accounts: ${res.status}`);
   return res.json();
@@ -11,8 +11,8 @@ export async function fetchAccounts(): Promise<LinkedAccount[]> {
 export async function linkAccount(
   platform: string,
   credentials: Record<string, string>
-): Promise<LinkedAccount> {
-  const res = await fetch(`${BASE}/link`, {
+): Promise<Account> {
+  const res = await fetch(BASE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ platform, credentials }),

@@ -33,27 +33,31 @@ export class AcPortfolioForm extends LitElement {
 
   @state() private _name = '';
   @state() private _description = '';
-  @state() private _selectedIds = new Set<string>();
+  @state() private _selectedTickers = new Set<string>();
 
   connectedCallback() {
     super.connectedCallback();
     if (this.initial) {
       this._name = this.initial.name ?? '';
       this._description = this.initial.description ?? '';
-      this._selectedIds = new Set(this.initial.assetIds ?? []);
+      this._selectedTickers = new Set(this.initial.asset_tickers ?? []);
     }
   }
 
-  private _toggleAsset(id: string) {
-    const s = new Set(this._selectedIds);
-    s.has(id) ? s.delete(id) : s.add(id);
-    this._selectedIds = s;
+  private _toggleAsset(ticker: string) {
+    const s = new Set(this._selectedTickers);
+    s.has(ticker) ? s.delete(ticker) : s.add(ticker);
+    this._selectedTickers = s;
   }
 
   private _submit(e: Event) {
     e.preventDefault();
     this.dispatchEvent(new CustomEvent('ac-portfolio-submit', {
-      detail: { name: this._name, description: this._description, assetIds: Array.from(this._selectedIds) },
+      detail: {
+        name: this._name,
+        description: this._description,
+        asset_tickers: Array.from(this._selectedTickers),
+      },
       bubbles: true, composed: true,
     }));
   }
@@ -75,8 +79,8 @@ export class AcPortfolioForm extends LitElement {
             ${this.availableAssets.map(
               (a) => html`
                 <label class="asset-option">
-                  <input type="checkbox" .checked="${this._selectedIds.has(a.id)}" @change="${() => this._toggleAsset(a.id)}" />
-                  ${a.ticker} — ${a.name}
+                  <input type="checkbox" .checked="${this._selectedTickers.has(a.ticker)}" @change="${() => this._toggleAsset(a.ticker)}" />
+                  ${a.ticker} — ${a.name ?? ''}
                 </label>
               `
             )}

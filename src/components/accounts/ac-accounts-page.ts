@@ -3,7 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
 import { appContext, type AppState } from '@/store/app.context';
 import { unlinkAccount } from '@/services/account.service';
-import type { LinkedAccount } from '@/types/account';
+import type { Account } from '@/types/account';
 import './ac-account-card';
 import './ac-link-wizard';
 import '@/components/common/ac-modal';
@@ -29,7 +29,7 @@ export class AcAccountsPage extends LitElement {
   @state() private _showWizard = false;
 
   private async _unlink(e: CustomEvent) {
-    const account: LinkedAccount = e.detail;
+    const account: Account = e.detail;
     await unlinkAccount(account.id);
     // El re-fetch lo debería disparar el provider en ac-app
   }

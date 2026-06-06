@@ -68,8 +68,12 @@ export class AcApp extends LitElement {
         fetchAccounts(),
         fetchPortfolios(),
       ]);
-      const totalArs = assets.reduce((sum, a) => sum + a.totalArs, 0);
-      const totalUsd = assets.reduce((sum, a) => sum + (a.totalUsd ?? 0), 0);
+      const totalArs = assets
+        .filter((a) => a.currency === 'ARS')
+        .reduce((sum, a) => sum + (a.total_valuation ?? 0), 0);
+      const totalUsd = assets
+        .filter((a) => a.currency === 'USD')
+        .reduce((sum, a) => sum + (a.total_valuation ?? 0), 0);
       this._state = { assets, accounts, portfolios, totalArs, totalUsd, isLoading: false, error: null };
     } catch (err) {
       this._state = {

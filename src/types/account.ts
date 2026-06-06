@@ -1,14 +1,14 @@
-import type { Platform } from './asset';
+export type Platform = 'cocos' | 'iol' | 'mercadopago' | 'nacion';
 
-export type AccountStatus = 'CONNECTED' | 'ERROR' | 'PENDING' | 'DISCONNECTED';
+export type ConnectionStatus = 'active' | 'requires_reauthentication' | 'error';
 
-export interface LinkedAccount {
+export interface Account {
   id: string;
   platform: Platform;
-  label: string;
-  status: AccountStatus;
-  lastSyncAt: string | null;
-  errorMessage?: string;
+  label?: string;
+  connection_status: ConnectionStatus;
+  last_sync: string | null;
+  error_message?: string;
 }
 
 export interface CredentialField {
@@ -20,7 +20,7 @@ export interface CredentialField {
 
 export interface PlatformConfig {
   platform: Platform;
-  displayName: string;
-  logoUrl: string;
+  display_name: string;
+  logo_url: string;
   fields: CredentialField[];
 }
