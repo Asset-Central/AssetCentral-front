@@ -4,12 +4,14 @@ import { provide } from '@lit-labs/context';
 import { Router } from '@vaadin/router';
 import { appContext, initialState, type AppState } from '@/store/app.context';
 import { supabase } from '@/lib/supabase';
+import { profileIsComplete } from '@/services/auth.service';
 import { fetchAssets } from '@/services/asset.service';
 import { fetchAccounts } from '@/services/account.service';
 import { fetchPortfolios } from '@/services/portfolio.service';
 
 import '@/components/app/ac-nav';
 import '@/components/auth/ac-login';
+import '@/components/auth/ac-profile-complete';
 import '@/components/dashboard/ac-dashboard';
 import '@/components/assets/ac-asset-list';
 import '@/components/accounts/ac-accounts-page';
@@ -30,9 +32,9 @@ export class AcApp extends LitElement {
   @provide({ context: appContext })
   @state() private _state: AppState = { ...initialState };
 
-  /** true mientras se verifica la sesión inicial */
   @state() private _authChecking = true;
   @state() private _authenticated = false;
+  @state() private _needsProfile = false;
 
   private _router?: Router;
 
@@ -44,23 +46,27 @@ export class AcApp extends LitElement {
       this._authenticated = !!session;
       this._state = { ...this._state, session: session ?? null, user: session?.user ?? null };
 
-      if (event === 'SIGNED_IN' && session && !wasAuth) {
-        this._loadData();
+      if (event === 'SIGNED_IN' && session) {
+        this._needsProfile = !profileIsComplete(session.user);
+        if (!this._needsProfile && !wasAuth) {
+          this._loadData();
+        }
       }
       if (event === 'SIGNED_OUT') {
         this._state = { ...initialState };
         this._authenticated = false;
+        this._needsProfile = false;
         this._router = undefined;
       }
     });
 
-    // Verificar sesión existente una sola vez al arrancar
     supabase.auth.getSession()
       .then(({ data }) => {
         if (data.session) {
           this._authenticated = true;
+          this._needsProfile = !profileIsComplete(data.session.user);
           this._state = { ...this._state, session: data.session, user: data.session.user };
-          this._loadData();
+          if (!this._needsProfile) this._loadData();
         }
       })
       .catch(() => { /* sin sesión */ })
@@ -68,10 +74,12 @@ export class AcApp extends LitElement {
   }
 
   updated(changed: PropertyValues) {
-    // Inicializar el router la primera vez que el shell autenticado se renderiza
-    // (#outlet existe en el DOM solo cuando _authenticated === true)
-    if (changed.has('_authenticated') && this._authenticated && !this._router) {
-      const outlet = this.shadowRoot!.querySelector('#outlet')!;
+    // Inicializar el router solo cuando el shell está completamente renderizado:
+    // _authenticated === true Y _authChecking === false Y perfil completo (sin overlay)
+    if ((changed.has('_authenticated') || changed.has('_authChecking') || changed.has('_needsProfile'))
+        && this._authenticated && !this._authChecking && !this._needsProfile && !this._router) {
+      const outlet = this.shadowRoot!.querySelector('#outlet');
+      if (!outlet) return;
       this._router = new Router(outlet);
       this._router.setRoutes([
         { path: '/',               redirect: '/dashboard' },
@@ -82,6 +90,11 @@ export class AcApp extends LitElement {
         { path: '/portfolios/:id', component: 'ac-portfolio-detail' },
       ]);
     }
+  }
+
+  private _onProfileSaved() {
+    this._needsProfile = false;
+    this._loadData();
   }
 
   private async _loadData() {
@@ -99,17 +112,18 @@ export class AcApp extends LitElement {
   }
 
   render() {
-    // 1. Verificando sesión → spinner
     if (this._authChecking) {
       return html`<div class="centered"><ac-spinner></ac-spinner></div>`;
     }
 
-    // 2. Sin sesión → login directamente (sin pasar por el router)
     if (!this._authenticated) {
       return html`<ac-login></ac-login>`;
     }
 
-    // 3. Autenticado → shell con nav + router outlet
+    if (this._needsProfile) {
+      return html`<ac-profile-complete @profile-saved="${this._onProfileSaved}"></ac-profile-complete>`;
+    }
+
     return html`
       <div class="shell">
         <ac-nav .userEmail="${this._state.user?.email ?? ''}"></ac-nav>

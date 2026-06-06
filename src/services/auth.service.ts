@@ -16,13 +16,44 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   };
 }
 
-export async function signUp(email: string, password: string): Promise<AuthResult> {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+export async function signUp(
+  email: string,
+  password: string,
+  nombre: string,
+  apellido: string,
+  dni: string,
+): Promise<AuthResult> {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { nombre, apellido, dni, full_name: `${nombre} ${apellido}` },
+    },
+  });
   return {
     session: data.session,
     user: data.user,
     error: error?.message ?? null,
   };
+}
+
+export async function signInWithGoogle(): Promise<string | null> {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin },
+  });
+  return error?.message ?? null;
+}
+
+export async function saveUserProfile(
+  nombre: string,
+  apellido: string,
+  dni: string,
+): Promise<string | null> {
+  const { error } = await supabase.auth.updateUser({
+    data: { nombre, apellido, dni, full_name: `${nombre} ${apellido}` },
+  });
+  return error?.message ?? null;
 }
 
 export async function signOut(): Promise<void> {
@@ -32,4 +63,10 @@ export async function signOut(): Promise<void> {
 export async function getSession(): Promise<Session | null> {
   const { data } = await supabase.auth.getSession();
   return data.session;
+}
+
+export function profileIsComplete(user: User | null): boolean {
+  if (!user) return false;
+  const meta = user.user_metadata ?? {};
+  return !!(meta.nombre && meta.apellido && meta.dni);
 }
