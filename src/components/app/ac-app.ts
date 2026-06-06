@@ -81,29 +81,27 @@ export class AcApp extends LitElement {
     const outlet = this.shadowRoot!.querySelector('#outlet')!;
     this._router = new Router(outlet);
 
+    // Guard reutilizable — cada ruta protegida lo aplica individualmente.
+    // Evita el problema de @vaadin/router v2 donde commands.redirect() dentro
+    // de un padre con children no encuentra rutas de nivel superior.
+    const guard = async (_ctx: unknown, commands: { redirect: (p: string) => unknown }) => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) return commands.redirect('/login');
+      } catch {
+        return commands.redirect('/login');
+      }
+      return undefined;
+    };
+
     this._router.setRoutes([
-      { path: '/login', component: 'ac-login' },
-      {
-        path: '/',
-        action: async (_ctx, commands) => {
-          try {
-            const { data } = await supabase.auth.getSession();
-            if (!data.session) return commands.redirect('/login');
-          } catch {
-            // Si Supabase falla (ej: .env no configurado), mandamos al login
-            return commands.redirect('/login');
-          }
-          return undefined;
-        },
-        children: [
-          { path: '',               redirect: '/dashboard' },
-          { path: 'dashboard',      component: 'ac-dashboard' },
-          { path: 'assets',         component: 'ac-asset-list' },
-          { path: 'accounts',       component: 'ac-accounts-page' },
-          { path: 'portfolios',     component: 'ac-portfolio-manager' },
-          { path: 'portfolios/:id', component: 'ac-portfolio-detail' },
-        ],
-      },
+      { path: '/login',          component: 'ac-login' },
+      { path: '/',               redirect: '/dashboard' },
+      { path: '/dashboard',      action: guard, component: 'ac-dashboard' },
+      { path: '/assets',         action: guard, component: 'ac-asset-list' },
+      { path: '/accounts',       action: guard, component: 'ac-accounts-page' },
+      { path: '/portfolios',     action: guard, component: 'ac-portfolio-manager' },
+      { path: '/portfolios/:id', action: guard, component: 'ac-portfolio-detail' },
     ]);
   }
 
