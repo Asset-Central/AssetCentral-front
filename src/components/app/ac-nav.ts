@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { Router } from '@vaadin/router';
+import { signOut } from '@/services/auth.service';
 
 interface NavItem {
   path: string;
@@ -18,7 +20,8 @@ const NAV_ITEMS: NavItem[] = [
 export class AcNav extends LitElement {
   static styles = css`
     :host {
-      display: block;
+      display: flex;
+      flex-direction: column;
       width: var(--nav-width);
       min-height: 100%;
       background: var(--color-surface);
@@ -34,16 +37,14 @@ export class AcNav extends LitElement {
       color: var(--color-text);
       letter-spacing: -0.02em;
     }
-
-    .logo span {
-      color: var(--color-primary-light);
-    }
+    .logo span { color: var(--color-primary-light); }
 
     nav {
       display: flex;
       flex-direction: column;
       gap: var(--space-1);
       padding: 0 var(--space-3);
+      flex: 1;
     }
 
     a {
@@ -58,12 +59,10 @@ export class AcNav extends LitElement {
       font-weight: 500;
       transition: background var(--transition-fast), color var(--transition-fast);
     }
-
     a:hover {
       background: var(--color-surface-raised);
       color: var(--color-text);
     }
-
     a.active {
       background: color-mix(in srgb, var(--color-primary) 15%, transparent);
       color: var(--color-primary-light);
@@ -74,7 +73,46 @@ export class AcNav extends LitElement {
       width: 20px;
       text-align: center;
     }
+
+    .user-section {
+      padding: var(--space-3) var(--space-4);
+      margin: 0 var(--space-3);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .user-email {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: var(--space-2);
+    }
+
+    .logout-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-align: left;
+    }
+    .logout-btn:hover {
+      background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+      color: var(--color-danger);
+    }
   `;
+
+  @property({ type: String }) userEmail = '';
 
   @property({ type: String })
   activePath = window.location.pathname;
@@ -93,6 +131,11 @@ export class AcNav extends LitElement {
     this.activePath = window.location.pathname;
   };
 
+  private async _logout() {
+    await signOut();
+    Router.go('/login');
+  }
+
   render() {
     return html`
       <div class="logo">Asset<span>Central</span></div>
@@ -109,6 +152,12 @@ export class AcNav extends LitElement {
           `
         )}
       </nav>
+      <div class="user-section">
+        ${this.userEmail ? html`<div class="user-email">${this.userEmail}</div>` : ''}
+        <button class="logout-btn" @click="${this._logout}">
+          <span>⎋</span> Cerrar sesión
+        </button>
+      </div>
     `;
   }
 }

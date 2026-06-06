@@ -3,25 +3,25 @@ import { customElement, state } from 'lit/decorators.js';
 import { provide } from '@lit-labs/context';
 import { Router } from '@vaadin/router';
 import { appContext, initialState, type AppState } from '@/store/app.context';
+import { supabase } from '@/lib/supabase';
 import { fetchAssets } from '@/services/asset.service';
 import { fetchAccounts } from '@/services/account.service';
 import { fetchPortfolios } from '@/services/portfolio.service';
 
 import '@/components/app/ac-nav';
+import '@/components/auth/ac-login';
 import '@/components/dashboard/ac-dashboard';
 import '@/components/assets/ac-asset-list';
 import '@/components/accounts/ac-accounts-page';
 import '@/components/portfolios/ac-portfolio-manager';
+import '@/components/portfolios/ac-portfolio-detail';
 
 @customElement('ac-app')
 export class AcApp extends LitElement {
   static styles = css`
-    :host {
-      display: flex;
-      height: 100%;
-    }
+    :host { display: flex; height: 100%; }
 
-    .layout {
+    .shell {
       display: flex;
       width: 100%;
       height: 100%;
@@ -34,30 +34,81 @@ export class AcApp extends LitElement {
       min-width: 0;
     }
 
-    #router-outlet {
-      width: 100%;
-    }
+    /* Sin nav: ocupa todo el ancho (pantalla de login) */
+    .main.full { padding: 0; }
+
+    #outlet { width: 100%; }
   `;
 
   @provide({ context: appContext })
   @state()
   private _state: AppState = { ...initialState };
 
+  @state() private _authenticated = false;
+
   private _router!: Router;
 
-  firstUpdated() {
-    const outlet = this.shadowRoot!.querySelector('#router-outlet')!;
-    this._router = new Router(outlet);
-    this._router.setRoutes([
-      { path: '/', redirect: '/dashboard' },
-      { path: '/dashboard', component: 'ac-dashboard' },
-      { path: '/assets', component: 'ac-asset-list' },
-      { path: '/accounts', component: 'ac-accounts-page' },
-      { path: '/portfolios', component: 'ac-portfolio-manager' },
-      { path: '/portfolios/:id', component: 'ac-portfolio-detail' },
-    ]);
+  connectedCallback() {
+    super.connectedCallback();
 
-    this._loadData();
+    supabase.auth.onAuthStateChange((event, session) => {
+      const wasAuth = this._authenticated;
+      this._authenticated = !!session;
+      this._state = { ...this._state, session: session ?? null, user: session?.user ?? null };
+
+      if (event === 'SIGNED_IN' && !wasAuth) {
+        this._loadData();
+        if (window.location.pathname === '/login') Router.go('/dashboard');
+      }
+
+      if (event === 'SIGNED_OUT') {
+        this._state = { ...initialState };
+        this._authenticated = false;
+        Router.go('/login');
+      }
+    });
+  }
+
+  firstUpdated() {
+    this._setupRouter();
+
+    // Sesión persistida (recarga de página)
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        this._authenticated = true;
+        this._state = {
+          ...this._state,
+          session: data.session,
+          user: data.session.user,
+        };
+        this._loadData();
+      }
+    });
+  }
+
+  private _setupRouter() {
+    const outlet = this.shadowRoot!.querySelector('#outlet')!;
+    this._router = new Router(outlet);
+
+    this._router.setRoutes([
+      { path: '/login', component: 'ac-login' },
+      {
+        path: '/',
+        action: async (_ctx, commands) => {
+          const { data } = await supabase.auth.getSession();
+          if (!data.session) return commands.redirect('/login');
+          return undefined;
+        },
+        children: [
+          { path: '',               redirect: '/dashboard' },
+          { path: 'dashboard',      component: 'ac-dashboard' },
+          { path: 'assets',         component: 'ac-asset-list' },
+          { path: 'accounts',       component: 'ac-accounts-page' },
+          { path: 'portfolios',     component: 'ac-portfolio-manager' },
+          { path: 'portfolios/:id', component: 'ac-portfolio-detail' },
+        ],
+      },
+    ]);
   }
 
   private async _loadData() {
@@ -74,7 +125,7 @@ export class AcApp extends LitElement {
       const totalUsd = assets
         .filter((a) => a.currency === 'USD')
         .reduce((sum, a) => sum + (a.total_valuation ?? 0), 0);
-      this._state = { assets, accounts, portfolios, totalArs, totalUsd, isLoading: false, error: null };
+      this._state = { ...this._state, assets, accounts, portfolios, totalArs, totalUsd, isLoading: false, error: null };
     } catch (err) {
       this._state = {
         ...this._state,
@@ -85,11 +136,15 @@ export class AcApp extends LitElement {
   }
 
   render() {
+    // #outlet siempre en la misma posición → el router no pierde la referencia
+    // al cambiar entre estado autenticado y no autenticado.
     return html`
-      <div class="layout">
-        <ac-nav></ac-nav>
-        <main class="main">
-          <div id="router-outlet"></div>
+      <div class="shell">
+        ${this._authenticated
+          ? html`<ac-nav .userEmail="${this._state.user?.email ?? ''}"></ac-nav>`
+          : ''}
+        <main class="main ${this._authenticated ? '' : 'full'}">
+          <div id="outlet"></div>
         </main>
       </div>
     `;

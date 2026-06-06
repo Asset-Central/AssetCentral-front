@@ -1,15 +1,16 @@
+import { apiFetch } from '@/lib/fetch';
 import type { Portfolio, PortfolioSummary } from '@/types/portfolio';
 
 const BASE = '/api/portfolios';
 
 export async function fetchPortfolios(): Promise<Portfolio[]> {
-  const res = await fetch(BASE);
+  const res = await apiFetch(BASE);
   if (!res.ok) throw new Error(`Error fetching portfolios: ${res.status}`);
   return res.json();
 }
 
 export async function fetchPortfolioSummary(id: string): Promise<PortfolioSummary> {
-  const res = await fetch(`${BASE}/${id}/summary`);
+  const res = await apiFetch(`${BASE}/${id}/summary`);
   if (!res.ok) throw new Error(`Error fetching portfolio summary: ${res.status}`);
   return res.json();
 }
@@ -17,9 +18,8 @@ export async function fetchPortfolioSummary(id: string): Promise<PortfolioSummar
 export async function createPortfolio(
   data: Pick<Portfolio, 'name' | 'description' | 'asset_tickers'>
 ): Promise<Portfolio> {
-  const res = await fetch(BASE, {
+  const res = await apiFetch(BASE, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`Error creating portfolio: ${res.status}`);
@@ -30,9 +30,8 @@ export async function updatePortfolio(
   id: string,
   data: Partial<Pick<Portfolio, 'name' | 'description' | 'asset_tickers'>>
 ): Promise<Portfolio> {
-  const res = await fetch(`${BASE}/${id}`, {
+  const res = await apiFetch(`${BASE}/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`Error updating portfolio: ${res.status}`);
@@ -40,6 +39,6 @@ export async function updatePortfolio(
 }
 
 export async function deletePortfolio(id: string): Promise<void> {
-  const res = await fetch(`${BASE}/${id}`, { method: 'DELETE' });
+  const res = await apiFetch(`${BASE}/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(`Error deleting portfolio: ${res.status}`);
 }

@@ -1,9 +1,10 @@
+import { apiFetch } from '@/lib/fetch';
 import type { Asset, AssetGroup, AssetType } from '@/types/asset';
 
 const BASE = '/api/assets';
 
 export async function fetchAssets(): Promise<Asset[]> {
-  const res = await fetch(BASE);
+  const res = await apiFetch(BASE);
   if (!res.ok) throw new Error(`Error fetching assets: ${res.status}`);
   return res.json();
 }

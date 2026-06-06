@@ -1,9 +1,10 @@
+import { apiFetch } from '@/lib/fetch';
 import type { Account, PlatformConfig } from '@/types/account';
 
 const BASE = '/api/accounts';
 
 export async function fetchAccounts(): Promise<Account[]> {
-  const res = await fetch(BASE);
+  const res = await apiFetch(BASE);
   if (!res.ok) throw new Error(`Error fetching accounts: ${res.status}`);
   return res.json();
 }
@@ -12,9 +13,8 @@ export async function linkAccount(
   platform: string,
   credentials: Record<string, string>
 ): Promise<Account> {
-  const res = await fetch(BASE, {
+  const res = await apiFetch(BASE, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ platform, credentials }),
   });
   if (!res.ok) throw new Error(`Error linking account: ${res.status}`);
@@ -22,12 +22,12 @@ export async function linkAccount(
 }
 
 export async function unlinkAccount(accountId: string): Promise<void> {
-  const res = await fetch(`${BASE}/${accountId}`, { method: 'DELETE' });
+  const res = await apiFetch(`${BASE}/${accountId}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(`Error unlinking account: ${res.status}`);
 }
 
 export async function fetchPlatformConfigs(): Promise<PlatformConfig[]> {
-  const res = await fetch(`${BASE}/platforms`);
+  const res = await apiFetch(`${BASE}/platforms`);
   if (!res.ok) throw new Error(`Error fetching platform configs: ${res.status}`);
   return res.json();
 }

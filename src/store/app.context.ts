@@ -1,9 +1,12 @@
 import { createContext } from '@lit-labs/context';
+import type { Session, User } from '@supabase/supabase-js';
 import type { Asset } from '@/types/asset';
 import type { Account } from '@/types/account';
 import type { Portfolio } from '@/types/portfolio';
 
 export interface AppState {
+  session: Session | null;
+  user: User | null;
   assets: Asset[];
   accounts: Account[];
   portfolios: Portfolio[];
@@ -16,6 +19,8 @@ export interface AppState {
 }
 
 export const initialState: AppState = {
+  session: null,
+  user: null,
   assets: [],
   accounts: [],
   portfolios: [],
