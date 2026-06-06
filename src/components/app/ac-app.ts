@@ -20,23 +20,9 @@ import '@/components/portfolios/ac-portfolio-detail';
 export class AcApp extends LitElement {
   static styles = css`
     :host { display: flex; height: 100%; }
-
-    .shell {
-      display: flex;
-      width: 100%;
-      height: 100%;
-    }
-
-    .main {
-      flex: 1;
-      overflow-y: auto;
-      padding: var(--space-6);
-      min-width: 0;
-    }
-
-    /* Sin nav: ocupa todo el ancho (pantalla de login) */
+    .shell { display: flex; width: 100%; height: 100%; }
+    .main { flex: 1; overflow-y: auto; padding: var(--space-6); min-width: 0; }
     .main.full { padding: 0; }
-
     #outlet { width: 100%; }
   `;
 
@@ -56,13 +42,13 @@ export class AcApp extends LitElement {
       this._authenticated = !!session;
       this._state = { ...this._state, session: session ?? null, user: session?.user ?? null };
 
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !wasAuth) {
-        // SIGNED_IN   → login nuevo
-        // INITIAL_SESSION → recarga de página con sesión persistida en localStorage
+      // Login nuevo → cargar datos y navegar al dashboard
+      if (event === 'SIGNED_IN' && session && !wasAuth) {
         this._loadData();
-        if (window.location.pathname === '/login') Router.go('/dashboard');
+        Router.go('/dashboard');
       }
 
+      // Logout → limpiar estado y mandar al login
       if (event === 'SIGNED_OUT') {
         this._state = { ...initialState };
         this._authenticated = false;
@@ -72,36 +58,36 @@ export class AcApp extends LitElement {
   }
 
   firstUpdated() {
+    // Las rutas NO tienen guards: @vaadin/router v2 no resuelve correctamente
+    // commands.redirect() hacia rutas de nivel raíz desde un action.
+    // En su lugar, se verifica la sesión UNA VEZ acá y se navega con Router.go().
     this._setupRouter();
-    // La sesión persistida se maneja vía onAuthStateChange(INITIAL_SESSION)
-    // que dispara Supabase automáticamente al inicializar desde localStorage.
+
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        if (data.session) {
+          this._authenticated = true;
+          this._state = { ...this._state, session: data.session, user: data.session.user };
+          this._loadData();
+        } else {
+          Router.go('/login');
+        }
+      })
+      .catch(() => Router.go('/login'));
   }
 
   private _setupRouter() {
     const outlet = this.shadowRoot!.querySelector('#outlet')!;
     this._router = new Router(outlet);
 
-    // Guard reutilizable — cada ruta protegida lo aplica individualmente.
-    // Evita el problema de @vaadin/router v2 donde commands.redirect() dentro
-    // de un padre con children no encuentra rutas de nivel superior.
-    const guard = async (_ctx: unknown, commands: { redirect: (p: string) => unknown }) => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) return commands.redirect('/login');
-      } catch {
-        return commands.redirect('/login');
-      }
-      return undefined;
-    };
-
     this._router.setRoutes([
       { path: '/login',          component: 'ac-login' },
       { path: '/',               redirect: '/dashboard' },
-      { path: '/dashboard',      action: guard, component: 'ac-dashboard' },
-      { path: '/assets',         action: guard, component: 'ac-asset-list' },
-      { path: '/accounts',       action: guard, component: 'ac-accounts-page' },
-      { path: '/portfolios',     action: guard, component: 'ac-portfolio-manager' },
-      { path: '/portfolios/:id', action: guard, component: 'ac-portfolio-detail' },
+      { path: '/dashboard',      component: 'ac-dashboard' },
+      { path: '/assets',         component: 'ac-asset-list' },
+      { path: '/accounts',       component: 'ac-accounts-page' },
+      { path: '/portfolios',     component: 'ac-portfolio-manager' },
+      { path: '/portfolios/:id', component: 'ac-portfolio-detail' },
     ]);
   }
 
@@ -130,8 +116,6 @@ export class AcApp extends LitElement {
   }
 
   render() {
-    // #outlet siempre en la misma posición → el router no pierde la referencia
-    // al cambiar entre estado autenticado y no autenticado.
     return html`
       <div class="shell">
         ${this._authenticated
