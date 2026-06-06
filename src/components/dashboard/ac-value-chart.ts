@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state, query } from 'lit/decorators.js';
+import { customElement, property, state, query } from 'lit/decorators.js';
 import {
   Chart, type ChartConfiguration,
   LineElement, PointElement, LinearScale, CategoryScale,
