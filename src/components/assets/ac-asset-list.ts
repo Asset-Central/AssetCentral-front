@@ -1,8 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { consume } from '@lit-labs/context';
+import { appContext, type AppState } from '@/store/app.context';
 import type { Asset, AssetType } from '@/types/asset';
 import './ac-asset-card';
 import '@/components/common/ac-empty-state';
+import '@/components/common/ac-spinner';
 
 const ALL_TYPES: AssetType[] = ['cedear', 'bono', 'fci', 'cash', 'crypto', 'stock'];
 
@@ -53,14 +56,21 @@ export class AcAssetList extends LitElement {
     .list { display: flex; flex-direction: column; gap: var(--space-2); }
   `;
 
+  @consume({ context: appContext, subscribe: true })
+  @state() private _app?: AppState;
+
   @property({ type: Array }) assets: Asset[] = [];
   @property({ type: Boolean }) compact = false;
 
   @state() private _query = '';
   @state() private _activeType: AssetType | null = null;
 
+  private get _source(): Asset[] {
+    return this.assets.length > 0 ? this.assets : (this._app?.assets ?? []);
+  }
+
   private get _filtered(): Asset[] {
-    return this.assets.filter((a) => {
+    return this._source.filter((a) => {
       const matchType = !this._activeType || a.asset_type === this._activeType;
       const q = this._query.toLowerCase();
       const matchQuery = !q
@@ -71,6 +81,10 @@ export class AcAssetList extends LitElement {
   }
 
   render() {
+    if (!this.compact && this._app?.isLoading) {
+      return html`<ac-spinner></ac-spinner>`;
+    }
+
     return html`
       ${!this.compact ? html`
         <div class="toolbar">
