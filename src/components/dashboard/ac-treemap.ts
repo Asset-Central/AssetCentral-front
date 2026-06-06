@@ -240,9 +240,9 @@ export class AcTreemap extends LitElement {
     const color = tileColor(tile.asset.daily_change_pct);
     const pct   = ((tile.asset.total_valuation ?? 0) / total * 100).toFixed(1);
 
-    // Area-based font: pow(area, 0.3) / 10 → naturally scales with tile size
+    // Area-based font: sqrt(area)/11 → escala real con el tamaño del tile
     const area = w * h;
-    const fs   = Math.min(Math.pow(area, 0.3) / 10, 40);
+    const fs   = Math.min(Math.sqrt(area) / 11, 38);
     const fsub = Math.max(fs * 0.65, 8);
 
     const showLabel = w > 55 && h > 26 && fs >= 8;
