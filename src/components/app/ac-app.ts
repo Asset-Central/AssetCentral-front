@@ -9,6 +9,7 @@ import { fetchAssets } from '@/services/asset.service';
 import { fetchAccounts } from '@/services/account.service';
 import { fetchPortfolios } from '@/services/portfolio.service';
 
+import { signOut } from '@/services/auth.service';
 import '@/components/app/ac-nav';
 import '@/components/auth/ac-login';
 import '@/components/auth/ac-profile-complete';
@@ -24,6 +25,45 @@ export class AcApp extends LitElement {
   static styles = css`
     :host { display: flex; height: 100%; }
     .shell { display: flex; width: 100%; height: 100%; }
+    .content { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-6);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-surface);
+      flex-shrink: 0;
+    }
+    .topbar-email {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 220px;
+    }
+    .topbar-logout {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-text-muted);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .topbar-logout:hover {
+      background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+      border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);
+      color: var(--color-danger);
+    }
     .main { flex: 1; overflow-y: auto; padding: var(--space-6); min-width: 0; }
     #outlet { width: 100%; }
     .centered { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
@@ -126,10 +166,20 @@ export class AcApp extends LitElement {
 
     return html`
       <div class="shell">
-        <ac-nav .userEmail="${this._state.user?.email ?? ''}"></ac-nav>
-        <main class="main">
-          <div id="outlet"></div>
-        </main>
+        <ac-nav></ac-nav>
+        <div class="content">
+          <div class="topbar">
+            ${this._state.user?.email ? html`
+              <span class="topbar-email">${this._state.user.email}</span>
+            ` : ''}
+            <button class="topbar-logout" @click="${() => signOut()}">
+              <span>⎋</span> Cerrar sesión
+            </button>
+          </div>
+          <main class="main">
+            <div id="outlet"></div>
+          </main>
+        </div>
       </div>
     `;
   }

@@ -1,7 +1,5 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { Router } from '@vaadin/router';
-import { signOut } from '@/services/auth.service';
 
 interface NavItem {
   path: string;
@@ -31,13 +29,17 @@ export class AcNav extends LitElement {
     }
 
     .logo {
+      display: block;
       padding: 0 var(--space-6) var(--space-8);
       font-size: var(--text-xl);
       font-weight: 700;
       color: var(--color-text);
       letter-spacing: -0.02em;
+      text-decoration: none;
+      cursor: pointer;
     }
     .logo span { color: var(--color-primary-light); }
+    .logo:hover { opacity: 0.85; }
 
     nav {
       display: flex;
@@ -74,45 +76,7 @@ export class AcNav extends LitElement {
       text-align: center;
     }
 
-    .user-section {
-      padding: var(--space-3) var(--space-4);
-      margin: 0 var(--space-3);
-      border-top: 1px solid var(--color-border);
-    }
-
-    .user-email {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin-bottom: var(--space-2);
-    }
-
-    .logout-btn {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-md);
-      border: none;
-      background: transparent;
-      color: var(--color-text-muted);
-      font-family: var(--font-sans);
-      font-size: var(--text-sm);
-      font-weight: 500;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      text-align: left;
-    }
-    .logout-btn:hover {
-      background: color-mix(in srgb, var(--color-danger) 12%, transparent);
-      color: var(--color-danger);
-    }
   `;
-
-  @property({ type: String }) userEmail = '';
 
   @property({ type: String })
   activePath = window.location.pathname;
@@ -131,14 +95,9 @@ export class AcNav extends LitElement {
     this.activePath = window.location.pathname;
   };
 
-  private async _logout() {
-    await signOut();
-    Router.go('/login');
-  }
-
   render() {
     return html`
-      <div class="logo">Asset<span>Central</span></div>
+      <a class="logo" href="/dashboard">Asset<span>Central</span></a>
       <nav>
         ${NAV_ITEMS.map(
           (item) => html`
@@ -152,12 +111,6 @@ export class AcNav extends LitElement {
           `
         )}
       </nav>
-      <div class="user-section">
-        ${this.userEmail ? html`<div class="user-email">${this.userEmail}</div>` : ''}
-        <button class="logout-btn" @click="${this._logout}">
-          <span>⎋</span> Cerrar sesión
-        </button>
-      </div>
     `;
   }
 }
