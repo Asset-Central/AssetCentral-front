@@ -17,7 +17,11 @@ export async function linkAccount(
     method: 'POST',
     body: JSON.stringify({ platform, credentials }),
   });
-  if (!res.ok) throw new Error(`Error linking account: ${res.status}`);
+  if (res.status === 422) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.detail ?? 'Credenciales inválidas');
+  }
+  if (!res.ok) throw new Error(`Error al vincular cuenta (${res.status})`);
   return res.json();
 }
 

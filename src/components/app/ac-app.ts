@@ -19,6 +19,7 @@ import '@/components/accounts/ac-accounts-page';
 import '@/components/portfolios/ac-portfolio-manager';
 import '@/components/portfolios/ac-portfolio-detail';
 import '@/components/mcp/ac-mcp-page';
+import '@/components/market/ac-market-page';
 import '@/components/common/ac-spinner';
 
 @customElement('ac-app')
@@ -78,9 +79,12 @@ export class AcApp extends LitElement {
   @state() private _needsProfile = false;
 
   private _router?: Router;
+  private _onDataRefresh = () => { if (this._authenticated) this._loadData(); };
 
   connectedCallback() {
     super.connectedCallback();
+
+    window.addEventListener('ac-data-refresh', this._onDataRefresh);
 
     supabase.auth.onAuthStateChange((event, session) => {
       const wasAuth = this._authenticated;
@@ -98,6 +102,7 @@ export class AcApp extends LitElement {
         this._authenticated = false;
         this._needsProfile = false;
         this._router = undefined;
+        window.removeEventListener('ac-data-refresh', this._onDataRefresh);
       }
     });
 
@@ -127,6 +132,7 @@ export class AcApp extends LitElement {
         { path: '/dashboard',      component: 'ac-dashboard' },
         { path: '/assets',         component: 'ac-asset-list' },
         { path: '/accounts',       component: 'ac-accounts-page' },
+        { path: '/market',         component: 'ac-market-page' },
         { path: '/portfolios',     component: 'ac-portfolio-manager' },
         { path: '/portfolios/:id', component: 'ac-portfolio-detail' },
         { path: '/mcp',            component: 'ac-mcp-page' },

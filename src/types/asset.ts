@@ -36,6 +36,13 @@ export interface InflationPoint {
   rate: number;  // monthly % change
 }
 
+export interface PerformancePoint {
+  date: string;
+  total: number;
+  market_pnl: number;
+  capital_flow: number;
+}
+
 export interface AssetGroup {
   type: AssetType;
   total_valuation: number;

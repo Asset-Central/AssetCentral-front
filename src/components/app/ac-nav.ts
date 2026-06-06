@@ -10,6 +10,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { path: '/dashboard',  label: 'Dashboard',  icon: '◎' },
   { path: '/assets',     label: 'Activos',    icon: '◈' },
+  { path: '/market',     label: 'Mercado',    icon: '◱' },
   { path: '/accounts',   label: 'Cuentas',    icon: '◉' },
   { path: '/portfolios', label: 'Portfolios', icon: '❏' },
   { path: '/mcp',        label: 'MCP',        icon: '⬡' },

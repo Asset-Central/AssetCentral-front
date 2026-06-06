@@ -8,6 +8,7 @@ import './ac-performance-badge';
 import './ac-distribution-chart';
 import './ac-treemap';
 import './ac-value-chart';
+import './ac-performance-chart';
 import '@/components/common/ac-spinner';
 
 @customElement('ac-dashboard')
@@ -21,15 +22,23 @@ export class AcDashboard extends LitElement {
       margin-bottom: var(--space-6);
     }
 
-    .top-row {
+    .layout {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 280px;
       gap: var(--space-4);
-      margin-bottom: var(--space-6);
+      align-items: start;
     }
 
     @media (max-width: 1100px) {
-      .top-row { grid-template-columns: 1fr 1fr; }
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .main { min-width: 0; }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
     }
   `;
 
@@ -45,27 +54,33 @@ export class AcDashboard extends LitElement {
     return html`
       <h1>Dashboard</h1>
 
-      <div class="top-row">
-        <ac-total-valuation
-          .totalArs="${this._app?.totalArs ?? 0}"
-          .totalUsd="${this._app?.totalUsd ?? 0}"
-        ></ac-total-valuation>
+      <div class="layout">
+        <!-- Main column: treemap + performance chart -->
+        <div class="main">
+          <ac-treemap
+            .assets="${this._app?.assets ?? []}"
+            .portfolios="${this._app?.portfolios ?? []}"
+          ></ac-treemap>
 
-        <ac-performance-badge
-          .assets="${this._app?.assets ?? []}"
-        ></ac-performance-badge>
+          <ac-performance-chart></ac-performance-chart>
+        </div>
 
-        <ac-distribution-chart
-          .assets="${this._app?.assets ?? []}"
-        ></ac-distribution-chart>
+        <!-- Sidebar: valuation + distribution + daily badge -->
+        <div class="sidebar">
+          <ac-total-valuation
+            .totalArs="${this._app?.totalArs ?? 0}"
+            .totalUsd="${this._app?.totalUsd ?? 0}"
+          ></ac-total-valuation>
+
+          <ac-distribution-chart
+            .assets="${this._app?.assets ?? []}"
+          ></ac-distribution-chart>
+
+          <ac-performance-badge
+            .assets="${this._app?.assets ?? []}"
+          ></ac-performance-badge>
+        </div>
       </div>
-
-      <ac-treemap
-        .assets="${this._app?.assets ?? []}"
-        .portfolios="${this._app?.portfolios ?? []}"
-      ></ac-treemap>
-
-      <ac-value-chart style="margin-top: var(--space-4)"></ac-value-chart>
     `;
   }
 }

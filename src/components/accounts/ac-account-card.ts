@@ -5,7 +5,7 @@ import type { Account, ConnectionStatus } from '@/types/account';
 const STATUS_LABEL: Record<ConnectionStatus, string> = {
   active:                    'Activa',
   error:                     'Error',
-  requires_reauthentication: 'Requiere reauth.',
+  requires_reauthentication: 'Requiere reconexión',
 };
 
 @customElement('ac-account-card')
@@ -33,7 +33,16 @@ export class AcAccountCard extends LitElement {
     .active                    { color: var(--color-success); }
     .error                     { color: var(--color-danger); }
     .requires_reauthentication { color: var(--color-warning); }
-    .actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+    .actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); flex-wrap: wrap; }
+    .reauth-banner {
+      display: flex; align-items: center; gap: var(--space-2);
+      margin-top: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent);
+      font-size: var(--text-xs); color: var(--color-warning);
+    }
     button {
       font-size: var(--text-xs); padding: var(--space-1) var(--space-3);
       border-radius: var(--radius-md); cursor: pointer; border: 1px solid var(--color-border);
@@ -42,6 +51,14 @@ export class AcAccountCard extends LitElement {
     }
     button:hover { color: var(--color-text); background: var(--color-surface-raised); }
     button.danger:hover { color: var(--color-danger); border-color: var(--color-danger); }
+    button.reconnect {
+      border-color: color-mix(in srgb, var(--color-warning) 50%, transparent);
+      color: var(--color-warning);
+    }
+    button.reconnect:hover {
+      background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+      border-color: var(--color-warning);
+    }
   `;
 
   @property({ type: Object }) account!: Account;
@@ -54,9 +71,14 @@ export class AcAccountCard extends LitElement {
     this.dispatchEvent(new CustomEvent('ac-sync', { detail: this.account, bubbles: true, composed: true }));
   }
 
+  private _reconnect() {
+    this.dispatchEvent(new CustomEvent('ac-reconnect', { detail: this.account, bubbles: true, composed: true }));
+  }
+
   render() {
     const { platform, label, connection_status, last_sync } = this.account;
     const syncDate = last_sync ? new Date(last_sync).toLocaleString('es-AR') : 'Nunca';
+    const needsReauth = connection_status === 'requires_reauthentication';
     return html`
       <div class="row">
         <div>
@@ -68,8 +90,16 @@ export class AcAccountCard extends LitElement {
           ${STATUS_LABEL[connection_status]}
         </span>
       </div>
+      ${needsReauth ? html`
+        <div class="reauth-banner">
+          ⚠ Las credenciales de esta cuenta vencieron. Reconectá para seguir viendo tus activos.
+        </div>
+      ` : ''}
       <div class="actions">
-        <button @click="${this._sync}">Sincronizar</button>
+        ${needsReauth
+          ? html`<button class="reconnect" @click="${this._reconnect}">Reconectar</button>`
+          : html`<button @click="${this._sync}">Sincronizar</button>`
+        }
         <button class="danger" @click="${this._unlink}">Desvincular</button>
       </div>
     `;

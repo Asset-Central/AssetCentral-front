@@ -19,23 +19,38 @@ export class AcCredentialForm extends LitElement {
       font-size: var(--text-sm);
     }
     input:focus { outline: 2px solid var(--color-primary); }
+    input:disabled { opacity: 0.5; cursor: not-allowed; }
     .actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-2); }
-    .error { color: var(--color-danger); font-size: var(--text-sm); }
+    .error {
+      display: flex; align-items: flex-start; gap: var(--space-2);
+      color: var(--color-danger); font-size: var(--text-sm);
+      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
+      border-radius: var(--radius-md);
+      padding: var(--space-2) var(--space-3);
+    }
+    .loading-hint {
+      font-size: var(--text-xs); color: var(--color-text-muted);
+      text-align: center; padding: var(--space-1) 0;
+    }
   `;
 
   @property({ type: Object }) config!: PlatformConfig;
+  @property({ type: Boolean }) submitting = false;
+  @property({ type: String }) error = '';
+
   @state() private _values: Record<string, string> = {};
-  @state() private _loading = false;
-  @state() private _error = '';
 
   private _set(name: string, value: string) {
     this._values = { ...this._values, [name]: value };
   }
 
-  private async _submit(e: Event) {
+  private _submit(e: Event) {
     e.preventDefault();
-    this._loading = true;
-    this._error = '';
+    if (this.submitting) return;
+    // Validar que todos los campos requeridos tengan valor
+    const missing = (this.config?.fields ?? []).some(f => !this._values[f.name]?.trim());
+    if (missing) return;
     this.dispatchEvent(
       new CustomEvent('ac-submit-credentials', {
         detail: { platform: this.config.platform, credentials: { ...this._values } },
@@ -51,26 +66,28 @@ export class AcCredentialForm extends LitElement {
   render() {
     return html`
       <form @submit="${this._submit}">
-        ${this.config?.fields.map(
-          (f) => html`
-            <label>
-              ${f.label}
-              <input
-                type="${f.type}"
-                placeholder="${f.placeholder ?? ''}"
-                .value="${this._values[f.name] ?? ''}"
-                @input="${(e: InputEvent) => this._set(f.name, (e.target as HTMLInputElement).value)}"
-                required
-                autocomplete="off"
-              />
-            </label>
-          `
-        )}
-        ${this._error ? html`<span class="error">${this._error}</span>` : ''}
+        ${this.config?.fields.map(f => html`
+          <label>
+            ${f.label}
+            <input
+              type="${f.type}"
+              placeholder="${f.placeholder ?? ''}"
+              .value="${this._values[f.name] ?? ''}"
+              @input="${(e: InputEvent) => this._set(f.name, (e.target as HTMLInputElement).value)}"
+              ?disabled="${this.submitting}"
+              required
+              autocomplete="off"
+            />
+          </label>
+        `)}
+        ${this.error ? html`<div class="error">⚠ ${this.error}</div>` : ''}
+        ${this.submitting ? html`<div class="loading-hint">Verificando credenciales…</div>` : ''}
         <div class="actions">
-          <ac-button variant="ghost" type="button" @click="${this._cancel}">Cancelar</ac-button>
-          <ac-button variant="primary" type="submit" ?disabled="${this._loading}">
-            ${this._loading ? 'Vinculando...' : 'Vincular cuenta'}
+          <ac-button variant="ghost" ?disabled="${this.submitting}" @click="${this._cancel}">Cancelar</ac-button>
+          <!-- ac-button vive en shadow DOM y no dispara submit del form nativo,
+               por eso usamos @click que llama _submit directamente -->
+          <ac-button variant="primary" ?disabled="${this.submitting}" @click="${this._submit}">
+            ${this.submitting ? 'Verificando…' : 'Vincular cuenta'}
           </ac-button>
         </div>
       </form>

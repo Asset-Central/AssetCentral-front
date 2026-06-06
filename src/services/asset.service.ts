@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/fetch';
-import type { Asset, AssetGroup, AssetType, InflationPoint, PricePoint, ValuePoint } from '@/types/asset';
+import type { Asset, AssetGroup, AssetType, InflationPoint, PerformancePoint, PricePoint, ValuePoint } from '@/types/asset';
 
 const BASE = '/api/assets';
 
@@ -18,6 +18,12 @@ export async function fetchAssetHistory(ticker: string, range = '30d'): Promise<
 export async function fetchValueHistory(range = '30d'): Promise<ValuePoint[]> {
   const res = await apiFetch(`${BASE}/value-history?range=${encodeURIComponent(range)}`);
   if (!res.ok) throw new Error(`Error fetching value history: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchPerformance(range = '30d'): Promise<PerformancePoint[]> {
+  const res = await apiFetch(`${BASE}/performance?range=${encodeURIComponent(range)}`);
+  if (!res.ok) throw new Error(`Error fetching performance: ${res.status}`);
   return res.json();
 }
 
