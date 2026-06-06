@@ -6,7 +6,7 @@ import { appContext, type AppState } from '@/store/app.context';
 import './ac-total-valuation';
 import './ac-performance-badge';
 import './ac-distribution-chart';
-import '@/components/assets/ac-asset-list';
+import './ac-treemap';
 import '@/components/common/ac-spinner';
 
 @customElement('ac-dashboard')
@@ -27,15 +27,8 @@ export class AcDashboard extends LitElement {
       margin-bottom: var(--space-6);
     }
 
-    .bottom-row {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: var(--space-4);
-    }
-
     @media (max-width: 1100px) {
-      .top-row    { grid-template-columns: 1fr 1fr; }
-      .bottom-row { grid-template-columns: 1fr; }
+      .top-row { grid-template-columns: 1fr 1fr; }
     }
   `;
 
@@ -66,12 +59,7 @@ export class AcDashboard extends LitElement {
         ></ac-distribution-chart>
       </div>
 
-      <div class="bottom-row">
-        <ac-asset-list
-          .assets="${this._app?.assets?.slice(0, 5) ?? []}"
-          compact
-        ></ac-asset-list>
-      </div>
+      <ac-treemap .assets="${this._app?.assets ?? []}"></ac-treemap>
     `;
   }
 }
