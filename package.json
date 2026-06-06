@@ -9,11 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lit": "^3.2.0",
     "@lit-labs/context": "^0.5.1",
-    "@vaadin/router": "^2.0.0",
     "@supabase/supabase-js": "^2.45.0",
-    "chart.js": "^4.4.4"
+    "@vaadin/router": "^2.0.0",
+    "chart.js": "^4.4.4",
+    "lit": "^3.2.0",
+    "playwright": "^1.60.0"
   },
   "devDependencies": {
     "typescript": "^5.5.3",

@@ -13,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/accounts',   label: 'Cuentas',    icon: '◉' },
   { path: '/portfolios', label: 'Portfolios', icon: '❏' },
   { path: '/mcp',        label: 'MCP',        icon: '⬡' },
+  { path: '/profile',    label: 'Mi Perfil',  icon: '◷' },
 ];
 
 @customElement('ac-nav')

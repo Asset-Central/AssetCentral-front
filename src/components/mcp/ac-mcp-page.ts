@@ -304,6 +304,18 @@ export class AcMcpPage extends LitElement {
               <span class="param required">user_id*</span>
             </div>
           </div>
+
+          <div class="tool-card">
+            <div class="tool-name">get_user_financial_profile</div>
+            <div class="tool-desc">
+              Perfil financiero personal del usuario: edad, ingresos, capacidad de ahorro,
+              aversión al riesgo, horizonte de inversión y objetivos. Usar como contexto
+              para recomendaciones personalizadas.
+            </div>
+            <div class="tool-params">
+              <span class="param required">user_id*</span>
+            </div>
+          </div>
         </div>
 
         <p style="margin-top: var(--space-4); margin-bottom: 0;">
@@ -370,6 +382,16 @@ export class AcMcpPage extends LitElement {
             <span class="method del">DELETE</span>
             <span class="endpoint-path">/api/portfolios/{id}</span>
             <span class="endpoint-label">Eliminar portfolio</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/api/profile</span>
+            <span class="endpoint-label">Perfil financiero del usuario</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method patch">PUT</span>
+            <span class="endpoint-path">/api/profile</span>
+            <span class="endpoint-label">Guardar perfil financiero</span>
           </div>
         </div>
       </div>
