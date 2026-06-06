@@ -1,5 +1,6 @@
 import { LitElement, html, svg, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { Router } from '@vaadin/router';
 import type { Asset, AssetType } from '@/types/asset';
 
 interface Tile {
@@ -7,34 +8,30 @@ interface Tile {
   asset: Asset;
 }
 
-// Colores por tipo (para leyenda)
-const TYPE_COLOR: Record<AssetType, string> = {
-  cedear: '#818cf8',
-  bono:   '#34d399',
-  fci:    '#fb923c',
-  cash:   '#facc15',
-  stock:  '#f472b6',
-  crypto: '#60a5fa',
-};
+interface Tip {
+  x: number;
+  y: number;
+  asset: Asset;
+}
 
 /** Devuelve color de tile según daily_change_pct: verde si sube, rojo si baja, gris si neutro. */
 function tileColor(pct: number | undefined): string {
-  if (pct == null) return '#4b5563';           // gris neutro
-  if (pct >= 3)    return '#059669';           // verde oscuro
-  if (pct >= 1)    return '#34d399';           // verde medio
-  if (pct >= 0)    return '#6ee7b7';           // verde claro
-  if (pct >= -1)   return '#fca5a5';           // rojo claro
-  if (pct >= -3)   return '#f87171';           // rojo medio
-  return '#dc2626';                            // rojo oscuro
+  if (pct == null) return '#4b5563';
+  if (pct >= 3)    return '#059669';
+  if (pct >= 1)    return '#34d399';
+  if (pct >= 0)    return '#6ee7b7';
+  if (pct >= -1)   return '#fca5a5';
+  if (pct >= -3)   return '#f87171';
+  return '#dc2626';
 }
 
 const TYPE_LABEL: Record<AssetType, string> = {
-  cedear: 'CEDEARs',
-  bono:   'Bonos',
+  cedear: 'CEDEAR',
+  bono:   'Bono',
   fci:    'FCI',
   cash:   'Efectivo',
-  stock:  'Acciones',
-  crypto: 'Crypto',
+  stock:  'Acción',
+  crypto: 'Cripto',
 };
 
 @customElement('ac-treemap')
@@ -42,6 +39,7 @@ export class AcTreemap extends LitElement {
   static styles = css`
     :host { display: block; width: 100%; }
     .wrap {
+      position: relative;
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
@@ -72,7 +70,7 @@ export class AcTreemap extends LitElement {
       flex-shrink: 0;
     }
     svg { display: block; border-radius: var(--radius-md); overflow: hidden; }
-    .tile { cursor: default; }
+    .tile { cursor: pointer; }
     .tile rect { transition: opacity 0.12s; }
     .tile:hover rect { opacity: 0.8; }
     .empty {
@@ -81,16 +79,49 @@ export class AcTreemap extends LitElement {
       color: var(--color-text-muted);
       font-size: var(--text-sm);
     }
+
+    /* Tooltip */
+    .tip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15, 15, 25, 0.92);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: nowrap;
+      color: #e5e7eb;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      z-index: 10;
+      transform: translate(12px, -50%);
+    }
+    .tip-ticker {
+      font-weight: 700;
+      font-size: 13px;
+      color: #f9fafb;
+    }
+    .tip-type {
+      color: #9ca3af;
+      font-size: 11px;
+    }
+    .tip-price {
+      font-family: monospace;
+      color: #d1fae5;
+      margin-top: 2px;
+    }
+    .tip-change-up   { color: #34d399; font-family: monospace; font-size: 11px; }
+    .tip-change-down { color: #f87171; font-family: monospace; font-size: 11px; }
   `;
 
   @property({ type: Array }) assets: Asset[] = [];
   @state() private _w = 900;
+  @state() private _tip: Tip | null = null;
 
   private _ro?: ResizeObserver;
   private readonly H = 420;
 
   firstUpdated() {
-    const el = this.shadowRoot!.querySelector('svg') ?? this.shadowRoot!.querySelector('.wrap')!;
     this._ro = new ResizeObserver(entries => {
       const w = entries[0].contentRect.width;
       if (w > 10) this._w = w;
@@ -103,11 +134,27 @@ export class AcTreemap extends LitElement {
     this._ro?.disconnect();
   }
 
+  private _onTileClick(ticker: string) {
+    Router.go(`/assets?open=${encodeURIComponent(ticker)}`);
+  }
+
+  private _onTileHover(e: MouseEvent, asset: Asset) {
+    const svgEl = this.shadowRoot!.querySelector('svg');
+    if (!svgEl) return;
+    const rect = svgEl.getBoundingClientRect();
+    this._tip = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      asset,
+    };
+  }
+
   render() {
     const items = this.assets.filter(a => (a.total_valuation ?? 0) > 0);
     const total = items.reduce((s, a) => s + (a.total_valuation ?? 0), 0);
+    const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
-    const usedTypes = [...new Set(items.map(a => a.asset_type).filter(Boolean))] as AssetType[];
+    const tip = this._tip;
 
     return html`
       <div class="wrap">
@@ -137,10 +184,26 @@ export class AcTreemap extends LitElement {
               width="${this._w}"
               height="${this.H}"
               viewBox="0 0 ${this._w} ${this.H}"
+              @mouseleave="${() => { this._tip = null; }}"
             >
               ${this._buildTiles(items, total).map(tile => this._tile(tile, total))}
             </svg>
           `}
+
+        ${tip ? html`
+          <div class="tip" style="left:${tip.x}px;top:${tip.y}px">
+            <div class="tip-ticker">${tip.asset.ticker}</div>
+            <div class="tip-type">${TYPE_LABEL[tip.asset.asset_type as AssetType] ?? tip.asset.asset_type ?? ''}</div>
+            ${tip.asset.unit_price != null ? html`
+              <div class="tip-price">${tip.asset.currency ?? ''} ${fmt.format(tip.asset.unit_price)}</div>
+            ` : ''}
+            ${tip.asset.daily_change_pct != null ? html`
+              <div class="${tip.asset.daily_change_pct >= 0 ? 'tip-change-up' : 'tip-change-down'}">
+                ${tip.asset.daily_change_pct >= 0 ? '▲' : '▼'} ${Math.abs(tip.asset.daily_change_pct).toFixed(2)}%
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -155,15 +218,21 @@ export class AcTreemap extends LitElement {
 
     const color = tileColor(tile.asset.daily_change_pct);
     const pct   = ((tile.asset.total_valuation ?? 0) / total * 100).toFixed(1);
-    const fs    = Math.min(w / 4.5, h / 2.2, 20);
-    const fsub  = Math.max(fs * 0.58, 9);
 
-    const showLabel = w > 28 && h > 18 && fs >= 7;
-    const showPct   = w > 48 && h > 36 && fsub >= 8;
+    // Scale font with tile size; cap at 20px
+    const fs    = Math.min(w / 5, h / 2.5, 20);
+    const fsub  = Math.max(fs * 0.65, 9);
+
+    // Only show text labels for tiles large enough to be legible
+    const showLabel = w > 60 && h > 30;
+    const showPct   = w > 80 && h > 50;
     const midY = showPct ? y + h / 2 - fsub * 0.4 : y + h / 2;
 
     return svg`
-      <g class="tile">
+      <g class="tile"
+        @mousemove="${(e: MouseEvent) => this._onTileHover(e, tile.asset)}"
+        @click="${() => this._onTileClick(tile.asset.ticker)}"
+      >
         <rect x="${x}" y="${y}" width="${w}" height="${h}"
               fill="${color}" rx="4" ry="4"/>
         ${showLabel ? svg`
@@ -175,7 +244,7 @@ export class AcTreemap extends LitElement {
           >${tile.asset.ticker}</text>
         ` : svg``}
         ${showPct ? svg`
-          <text x="${x + w / 2}" y="${midY + fs * 0.85}"
+          <text x="${x + w / 2}" y="${midY + fs * 0.9}"
                 text-anchor="middle" dominant-baseline="central"
                 font-size="${fsub}" font-weight="400"
                 fill="rgba(255,255,255,0.72)"

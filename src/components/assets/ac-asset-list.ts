@@ -54,6 +54,15 @@ export class AcAssetList extends LitElement {
     }
 
     .list { display: flex; flex-direction: column; gap: var(--space-2); }
+
+    .section-label {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: var(--space-2) 0 var(--space-1);
+    }
   `;
 
   @consume({ context: appContext, subscribe: true })
@@ -64,26 +73,65 @@ export class AcAssetList extends LitElement {
 
   @state() private _query = '';
   @state() private _activeType: AssetType | null = null;
+  @state() private _openTickers = new Set<string>();
 
   private get _source(): Asset[] {
     return this.assets.length > 0 ? this.assets : (this._app?.assets ?? []);
   }
 
-  private get _filtered(): Asset[] {
-    return this._source.filter((a) => {
-      const matchType = !this._activeType || a.asset_type === this._activeType;
-      const q = this._query.toLowerCase();
-      const matchQuery = !q
-        || a.ticker.toLowerCase().includes(q)
-        || (a.name ?? '').toLowerCase().includes(q);
-      return matchType && matchQuery;
-    });
+  connectedCallback() {
+    super.connectedCallback();
+    // Auto-open a ticker passed via ?open=TICKER (e.g. from treemap click)
+    const open = new URLSearchParams(window.location.search).get('open');
+    if (open) {
+      this._openTickers = new Set([open]);
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+  private _toggleCard(ticker: string) {
+    const next = new Set(this._openTickers);
+    if (next.has(ticker)) next.delete(ticker);
+    else next.add(ticker);
+    this._openTickers = next;
+  }
+
+  private _onToggleOpen(e: Event) {
+    const ticker: string = (e as CustomEvent).detail?.ticker;
+    if (ticker) this._toggleCard(ticker);
+  }
+
+  /** Open cards: always shown, sorted alphabetically */
+  private get _openAssets(): Asset[] {
+    return this._source
+      .filter(a => this._openTickers.has(a.ticker))
+      .sort((a, b) => a.ticker.localeCompare(b.ticker));
+  }
+
+  /** Closed cards: filtered by search/type, sorted alphabetically */
+  private get _closedAssets(): Asset[] {
+    return this._source
+      .filter(a => !this._openTickers.has(a.ticker))
+      .filter(a => {
+        const matchType = !this._activeType || a.asset_type === this._activeType;
+        const q = this._query.toLowerCase();
+        const matchQuery = !q
+          || a.ticker.toLowerCase().includes(q)
+          || (a.name ?? '').toLowerCase().includes(q);
+        return matchType && matchQuery;
+      })
+      .sort((a, b) => a.ticker.localeCompare(b.ticker));
   }
 
   render() {
     if (!this.compact && this._app?.isLoading) {
       return html`<ac-spinner></ac-spinner>`;
     }
+
+    const openAssets   = this._openAssets;
+    const closedAssets = this._closedAssets;
+    const anyOpen      = openAssets.length > 0;
+    const anyClosed    = closedAssets.length > 0;
 
     return html`
       ${!this.compact ? html`
@@ -107,10 +155,25 @@ export class AcAssetList extends LitElement {
         </div>
       ` : ''}
 
-      ${this._filtered.length === 0
-        ? html`<ac-empty-state icon="◎" title="Sin activos" message="No hay activos que coincidan con el filtro."></ac-empty-state>`
-        : html`<div class="list">${this._filtered.map((a) => html`<ac-asset-card .asset="${a}"></ac-asset-card>`)}</div>`
-      }
+      <div class="list" @toggle-open="${this._onToggleOpen}">
+        ${anyOpen ? html`
+          ${!this.compact && anyClosed ? html`<div class="section-label">Abiertos</div>` : ''}
+          ${openAssets.map(a => html`
+            <ac-asset-card .asset="${a}" .open="${true}"></ac-asset-card>
+          `)}
+        ` : ''}
+
+        ${anyClosed ? html`
+          ${!this.compact && anyOpen ? html`<div class="section-label">Cerrados</div>` : ''}
+          ${closedAssets.map(a => html`
+            <ac-asset-card .asset="${a}" .open="${false}"></ac-asset-card>
+          `)}
+        ` : ''}
+
+        ${!anyOpen && !anyClosed
+          ? html`<ac-empty-state icon="◎" title="Sin activos" message="No hay activos que coincidan con el filtro."></ac-empty-state>`
+          : ''}
+      </div>
     `;
   }
 }

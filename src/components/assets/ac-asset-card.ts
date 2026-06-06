@@ -1,8 +1,39 @@
-import { LitElement, html, css, svg } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { LitElement, html, css, type PropertyValues } from 'lit';
+import { customElement, property, state, query } from 'lit/decorators.js';
+import {
+  Chart, type ChartConfiguration,
+  LineElement, PointElement, LinearScale, CategoryScale,
+  LineController, Filler, Tooltip,
+} from 'chart.js';
 import type { Asset, PricePoint } from '@/types/asset';
 import { fetchAssetHistory } from '@/services/asset.service';
 import './ac-asset-type-badge';
+
+Chart.register(LineElement, PointElement, LinearScale, CategoryScale, LineController, Filler, Tooltip);
+
+type Range = '1h' | '1d' | '1w' | '30d' | '1y';
+
+const RANGE_LABELS: Record<Range, string> = { '1h': '1H', '1d': '1D', '1w': '1S', '30d': '1M', '1y': '1A' };
+
+function _formatLabel(dateStr: string, range: Range): string {
+  if (range === '1h' || range === '1d') {
+    const t = dateStr.includes('T') ? dateStr.split('T')[1] ?? '' : '';
+    return t.substring(0, 5);
+  }
+  const parts = dateStr.split('-');
+  if (parts.length >= 3) return `${parts[2]}/${parts[1]}`;
+  return dateStr;
+}
+
+function _formatTooltipDate(dateStr: string, range: Range): string {
+  if (range === '1h' || range === '1d') {
+    const [datePart = '', timePart = ''] = dateStr.split('T');
+    const [y = '', m = '', d = ''] = datePart.split('-');
+    return `${d}/${m}/${y} ${timePart}`;
+  }
+  const [y = '', m = '', d = ''] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
 
 @customElement('ac-asset-card')
 export class AcAssetCard extends LitElement {
@@ -12,13 +43,20 @@ export class AcAssetCard extends LitElement {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
-      padding: var(--space-4) var(--space-5);
       transition: border-color var(--transition-fast);
-      cursor: default;
     }
     :host(:hover) { border-color: var(--color-primary); }
 
-    .row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      cursor: pointer;
+      user-select: none;
+    }
+
     .left { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
     .info { min-width: 0; }
 
@@ -33,9 +71,7 @@ export class AcAssetCard extends LitElement {
       max-width: 180px;
     }
 
-    .right { display: flex; align-items: center; gap: var(--space-4); flex-shrink: 0; }
-
-    .sparkline { flex-shrink: 0; }
+    .right { display: flex; align-items: center; gap: var(--space-3); flex-shrink: 0; }
 
     .values { text-align: right; }
     .total {
@@ -64,41 +100,191 @@ export class AcAssetCard extends LitElement {
     .change.up   { background: color-mix(in srgb, #34d399 15%, transparent); color: #34d399; }
     .change.down { background: color-mix(in srgb, #f87171 15%, transparent); color: #f87171; }
     .change.flat { color: var(--color-text-muted); background: transparent; }
+
+    .chevron {
+      font-size: 10px;
+      color: var(--color-text-muted);
+      transition: transform var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .chevron.open { transform: rotate(180deg); }
+
+    .chart-section {
+      border-top: 1px solid var(--color-border);
+      padding: var(--space-2) var(--space-5) var(--space-4);
+    }
+    .chart-header {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: var(--space-1);
+    }
+    .range-btns { display: flex; gap: 2px; }
+    .range-btn {
+      padding: 1px 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: transparent;
+      color: var(--color-text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .range-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .range-btn.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+    }
+    canvas { display: block; max-height: 80px; width: 100%; }
+    .chart-loading {
+      display: flex; align-items: center; justify-content: center;
+      height: 60px;
+      color: var(--color-text-muted);
+      font-size: var(--text-xs);
+    }
   `;
 
   @property({ type: Object }) asset!: Asset;
-  @state() private _history: PricePoint[] = [];
+  @property({ type: Boolean }) open = false;
 
-  connectedCallback() {
-    super.connectedCallback();
-    fetchAssetHistory(this.asset.ticker)
-      .then(h => { this._history = h; })
-      .catch(() => { /* silencioso */ });
+  @query('canvas') private _canvas!: HTMLCanvasElement;
+  @state() private _history: PricePoint[] = [];
+  @state() private _range: Range = '30d';
+  @state() private _chartLoading = false;
+
+  private _loadedKey = '';
+  private _chart?: Chart;
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._chart?.destroy();
+    this._chart = undefined;
   }
 
-  private _sparkline(points: PricePoint[]) {
-    if (points.length < 2) return svg``;
-    const W = 80, H = 32;
-    const prices = points.map(p => p.unit_price);
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    const range = max - min || 1;
-    const xs = prices.map((_, i) => (i / (prices.length - 1)) * W);
-    const ys = prices.map(p => H - ((p - min) / range) * (H - 4) - 2);
-    const polyline = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
-    const last = prices[prices.length - 1];
-    const first = prices[0];
-    const color = last >= first ? '#34d399' : '#f87171';
-    return svg`
-      <polyline
-        points="${polyline}"
-        fill="none"
-        stroke="${color}"
-        stroke-width="1.5"
-        stroke-linejoin="round"
-        stroke-linecap="round"
-      />
-    `;
+  protected updated(changed: PropertyValues) {
+    // Lazy-load history when card is opened or range changes
+    if (this.open) {
+      const key = `${this.asset?.ticker}:${this._range}`;
+      if (key !== this._loadedKey) {
+        this._loadedKey = key;
+        this._loadHistory();
+      }
+    }
+
+    // Destroy chart when closing
+    if (changed.has('open') && !this.open) {
+      this._chart?.destroy();
+      this._chart = undefined;
+    }
+
+    // Render chart when open + data ready + no chart yet
+    if (this.open && !this._chartLoading && this._history.length >= 2) {
+      this._renderChart();
+    }
+  }
+
+  private async _loadHistory() {
+    // Destroy old chart so _renderChart() creates fresh on the (re)mounted canvas
+    this._chart?.destroy();
+    this._chart = undefined;
+    this._chartLoading = true;
+    try {
+      this._history = await fetchAssetHistory(this.asset.ticker, this._range);
+    } catch { this._history = []; }
+    finally { this._chartLoading = false; }
+  }
+
+  private _setRange(e: Event, r: Range) {
+    e.stopPropagation();
+    if (this._range === r) return;
+    this._range = r;
+    this._loadedKey = ''; // force reload in updated()
+  }
+
+  private _toggle(e: Event) {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('toggle-open', {
+      bubbles: true,
+      composed: true,
+      detail: { ticker: this.asset?.ticker },
+    }));
+  }
+
+  private _renderChart() {
+    if (!this._canvas) return;
+
+    const prices = this._history.map(p => p.unit_price);
+    const rawDates = this._history.map(p => p.date);
+
+    const first = prices[0] ?? 0;
+    const last  = prices[prices.length - 1] ?? 0;
+    const up    = last >= first;
+    const lineColor = up ? '#34d399' : '#f87171';
+    const fillColor = up ? 'rgba(52,211,153,0.12)' : 'rgba(248,113,113,0.12)';
+
+    if (this._chart) {
+      this._chart.data.labels = rawDates;
+      const ds = this._chart.data.datasets[0] as any;
+      ds.data = prices;
+      ds.borderColor = lineColor;
+      ds.backgroundColor = fillColor;
+      this._chart.update();
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    const config: ChartConfiguration = {
+      type: 'line',
+      data: {
+        labels: rawDates,
+        datasets: [{
+          data: prices,
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          tension: 0.35,
+          fill: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (ctx) => {
+                const label = ctx[0]?.label ?? '';
+                return _formatTooltipDate(label, self._range);
+              },
+              label: (ctx) => {
+                const v = ctx.parsed.y as number;
+                const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+                return ` ${self.asset.currency ?? ''} ${fmt.format(v)}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            display: false,
+            ticks: {
+              callback: (_, idx) => {
+                const label = (self._chart?.data.labels?.[idx] as string) ?? '';
+                return _formatLabel(label, self._range);
+              },
+            },
+          },
+          y: { display: false },
+        },
+      },
+    };
+    this._chart = new Chart(this._canvas, config);
   }
 
   render() {
@@ -118,8 +304,10 @@ export class AcAssetCard extends LitElement {
       ? `${daily_change_pct > 0 ? '▲' : daily_change_pct < 0 ? '▼' : '—'} ${Math.abs(daily_change_pct).toFixed(2)}%`
       : null;
 
+    const ranges: Range[] = ['1h', '1d', '1w', '30d', '1y'];
+
     return html`
-      <div class="row">
+      <div class="header" @click="${this._toggle}">
         <div class="left">
           <ac-asset-type-badge .type="${asset_type ?? 'stock'}"></ac-asset-type-badge>
           <div class="info">
@@ -129,21 +317,34 @@ export class AcAssetCard extends LitElement {
         </div>
 
         <div class="right">
-          ${this._history.length >= 2 ? html`
-            <div class="sparkline">
-              <svg width="80" height="32" viewBox="0 0 80 32">
-                ${this._sparkline(this._history)}
-              </svg>
-            </div>
-          ` : ''}
-
           <div class="values">
             <div class="total">${fmtTotal}</div>
             <div class="sub">${fmtPrice}</div>
             ${changeLabel ? html`<div class="change ${changeClass}">${changeLabel}</div>` : ''}
           </div>
+          <span class="chevron ${this.open ? 'open' : ''}">▼</span>
         </div>
       </div>
+
+      ${this.open ? html`
+        <div class="chart-section">
+          <div class="chart-header">
+            <div class="range-btns">
+              ${ranges.map(r => html`
+                <button
+                  class="range-btn ${this._range === r ? 'active' : ''}"
+                  @click="${(e: Event) => this._setRange(e, r)}"
+                >${RANGE_LABELS[r]}</button>
+              `)}
+            </div>
+          </div>
+          ${this._chartLoading
+            ? html`<div class="chart-loading">Cargando…</div>`
+            : this._history.length >= 2
+              ? html`<canvas></canvas>`
+              : html`<div class="chart-loading">Sin datos</div>`}
+        </div>
+      ` : ''}
     `;
   }
 }
