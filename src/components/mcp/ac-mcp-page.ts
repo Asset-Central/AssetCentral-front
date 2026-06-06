@@ -1,0 +1,384 @@
+import { LitElement, html, css } from 'lit';
+import { customElement } from 'lit/decorators.js';
+
+@customElement('ac-mcp-page')
+export class AcMcpPage extends LitElement {
+  static styles = css`
+    :host { display: block; }
+
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+    }
+
+    .subtitle {
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+      margin-bottom: var(--space-8);
+    }
+
+    .section {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+    }
+
+    .section-title {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .section-title .icon {
+      font-size: var(--text-xl);
+    }
+
+    p {
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+      line-height: 1.6;
+      margin-bottom: var(--space-4);
+    }
+
+    p:last-child { margin-bottom: 0; }
+
+    .url-block {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .url-block code {
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      color: var(--color-primary-light);
+      flex: 1;
+    }
+
+    .badge {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      padding: 2px var(--space-2);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+      color: var(--color-primary-light);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+      flex-shrink: 0;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .tool-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+    }
+
+    .tool-name {
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      color: var(--color-primary-light);
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+
+    .tool-desc {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      line-height: 1.5;
+      margin-bottom: var(--space-3);
+    }
+
+    .tool-params {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+    }
+
+    .param {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 2px var(--space-2);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
+      color: var(--color-text-subtle);
+      border: 1px solid var(--color-border);
+    }
+
+    .param.required {
+      color: var(--color-warning);
+      border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+      background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    }
+
+    .code-block {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code-block .key   { color: var(--color-primary-light); }
+    .code-block .str   { color: var(--color-success); }
+    .code-block .punct { color: var(--color-text-subtle); }
+
+    .info-row {
+      display: flex;
+      gap: var(--space-3);
+      align-items: flex-start;
+      padding: var(--space-3) var(--space-4);
+      background: color-mix(in srgb, var(--color-info) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-info) 25%, transparent);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+    }
+
+    .info-row .info-icon {
+      color: var(--color-info);
+      font-size: var(--text-base);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .info-row p {
+      margin: 0;
+      color: var(--color-info);
+      font-size: var(--text-xs);
+      line-height: 1.5;
+    }
+
+    .endpoint-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .endpoint-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+    }
+
+    .method {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 700;
+      padding: 2px var(--space-2);
+      border-radius: var(--radius-sm);
+      min-width: 44px;
+      text-align: center;
+    }
+    .method.get  { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 12%, transparent); }
+    .method.post { color: var(--color-warning);  background: color-mix(in srgb, var(--color-warning) 12%, transparent); }
+    .method.patch{ color: var(--color-info);     background: color-mix(in srgb, var(--color-info) 12%, transparent); }
+    .method.del  { color: var(--color-danger);   background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+
+    .endpoint-path {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      flex: 1;
+    }
+
+    .endpoint-label {
+      font-size: var(--text-xs);
+      color: var(--color-text-subtle);
+    }
+  `;
+
+  render() {
+    return html`
+      <h1>MCP</h1>
+      <p class="subtitle">
+        Model Context Protocol — conecta tu agente de IA a los datos financieros de AssetCentral.
+      </p>
+
+      <!-- Conexión -->
+      <div class="section">
+        <div class="section-title">
+          <span class="icon">⬡</span> Cómo conectarse
+        </div>
+
+        <div class="info-row">
+          <span class="info-icon">ℹ</span>
+          <p>
+            El servidor MCP está montado directamente sobre la API de AssetCentral usando
+            <strong>fastapi-mcp</strong>. Se expone en el mismo host que el backend,
+            en el path <code>/mcp</code>.
+          </p>
+        </div>
+
+        <p>URL del servidor:</p>
+        <div class="url-block">
+          <code>https://&lt;backend-url&gt;/mcp</code>
+          <span class="badge">HTTP / SSE</span>
+        </div>
+
+        <p>Configuración en Claude Desktop o cualquier cliente MCP compatible:</p>
+        <div class="code-block"><span class="punct">{</span>
+  <span class="key">"mcpServers"</span><span class="punct">:</span> <span class="punct">{</span>
+    <span class="key">"assetcentral"</span><span class="punct">:</span> <span class="punct">{</span>
+      <span class="key">"type"</span><span class="punct">:</span>    <span class="str">"http"</span><span class="punct">,</span>
+      <span class="key">"url"</span><span class="punct">:</span>     <span class="str">"https://&lt;backend-url&gt;/mcp"</span><span class="punct">,</span>
+      <span class="key">"headers"</span><span class="punct">:</span> <span class="punct">{</span>
+        <span class="key">"Authorization"</span><span class="punct">:</span> <span class="str">"Bearer &lt;supabase-jwt&gt;"</span>
+      <span class="punct">}</span>
+    <span class="punct">}</span>
+  <span class="punct">}</span>
+<span class="punct">}</span></div>
+
+        <p>
+          El token JWT se obtiene del cliente Supabase al iniciar sesión.
+          Cada tool call propaga el header <code>Authorization</code> automáticamente hacia el backend.
+        </p>
+      </div>
+
+      <!-- Tools dedicados -->
+      <div class="section">
+        <div class="section-title">
+          <span class="icon">◈</span> Tools financieros
+        </div>
+
+        <p>
+          Además de los endpoints REST, el servidor expone tres tools de alto nivel
+          diseñados específicamente para que un agente de IA consulte el contexto financiero del usuario.
+        </p>
+
+        <div class="tools-grid">
+          <div class="tool-card">
+            <div class="tool-name">get_financial_summary</div>
+            <div class="tool-desc">
+              Resumen financiero total: totales en ARS y USD, distribución por tipo de activo
+              y cantidad de posiciones activas.
+            </div>
+            <div class="tool-params">
+              <span class="param required">user_id*</span>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="tool-name">get_assets</div>
+            <div class="tool-desc">
+              Lista de activos con posición actual: ticker, nombre, plataforma, moneda,
+              cantidad, precio unitario y valuación total. Filtrable por tipo.
+            </div>
+            <div class="tool-params">
+              <span class="param required">user_id*</span>
+              <span class="param">asset_type?</span>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="tool-name">get_portfolios</div>
+            <div class="tool-desc">
+              Lista los portfolios del usuario con su valuación consolidada en ARS y USD,
+              cantidad de activos y metadata.
+            </div>
+            <div class="tool-params">
+              <span class="param required">user_id*</span>
+            </div>
+          </div>
+        </div>
+
+        <p style="margin-top: var(--space-4); margin-bottom: 0;">
+          Los tipos de activo válidos para el filtro de <code>get_assets</code> son:
+          <code>cedear</code>, <code>bono</code>, <code>fci</code>, <code>cash</code>,
+          <code>crypto</code>, <code>stock</code>.
+        </p>
+      </div>
+
+      <!-- Endpoints REST auto-expuestos -->
+      <div class="section">
+        <div class="section-title">
+          <span class="icon">◎</span> Endpoints REST auto-expuestos
+        </div>
+
+        <p>
+          <strong>fastapi-mcp</strong> convierte automáticamente todos los endpoints de la API
+          en tools MCP, incluyendo sus esquemas de request/response.
+          El agente puede invocarlos directamente sin configuración adicional.
+        </p>
+
+        <div class="endpoint-list">
+          <div class="endpoint-row">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/api/assets</span>
+            <span class="endpoint-label">Activos consolidados del usuario</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/api/accounts</span>
+            <span class="endpoint-label">Cuentas vinculadas</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/api/accounts</span>
+            <span class="endpoint-label">Vincular nueva cuenta</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method del">DELETE</span>
+            <span class="endpoint-path">/api/accounts/{id}</span>
+            <span class="endpoint-label">Desvincular cuenta</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/api/portfolios</span>
+            <span class="endpoint-label">Lista de portfolios</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/api/portfolios</span>
+            <span class="endpoint-label">Crear portfolio</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/api/portfolios/{id}/summary</span>
+            <span class="endpoint-label">Valuación de un portfolio</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method patch">PATCH</span>
+            <span class="endpoint-path">/api/portfolios/{id}</span>
+            <span class="endpoint-label">Editar portfolio</span>
+          </div>
+          <div class="endpoint-row">
+            <span class="method del">DELETE</span>
+            <span class="endpoint-path">/api/portfolios/{id}</span>
+            <span class="endpoint-label">Eliminar portfolio</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'ac-mcp-page': AcMcpPage;
+  }
+}
