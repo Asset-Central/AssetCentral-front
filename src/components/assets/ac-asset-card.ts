@@ -236,8 +236,11 @@ export class AcAssetCard extends LitElement {
       if (this._isCash) {
         const currency = this.asset.ticker === 'USDT' ? 'USD' : 'ARS';
         const inf: InflationPoint[] = await fetchInflation(currency);
-        // Map inflation points to PricePoint (rate → unit_price & total_valuation)
-        this._history = inf.map(p => ({
+        // Map global range → number of months of inflation data to show
+        const monthsMap: Record<string, number> = { '1h': 3, '1d': 3, '1w': 3, '30d': 12, '1y': inf.length };
+        const months = monthsMap[this._activeRange] ?? 12;
+        const sliced = inf.slice(-months);
+        this._history = sliced.map(p => ({
           date: p.date,
           unit_price: p.rate,
           total_valuation: p.rate,

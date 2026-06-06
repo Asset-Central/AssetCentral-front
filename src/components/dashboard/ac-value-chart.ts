@@ -6,6 +6,7 @@ import {
   LineController, Filler, Tooltip,
 } from 'chart.js';
 import { fetchValueHistory } from '@/services/asset.service';
+import { fetchPortfolioValueHistory } from '@/services/portfolio.service';
 import type { ValuePoint } from '@/types/asset';
 import '@/components/common/ac-spinner';
 
@@ -44,6 +45,8 @@ function _formatTooltipDate(dateStr: string, range: Range): string {
 
 @customElement('ac-value-chart')
 export class AcValueChart extends LitElement {
+  /** Si se provee, muestra el historial de este portfolio en lugar del global. */
+  @property({ type: String }) portfolioId?: string;
   static styles = css`
     :host {
       display: block;
@@ -123,7 +126,9 @@ export class AcValueChart extends LitElement {
     this._chart = undefined;
     this._loading = true;
     try {
-      this._data = await fetchValueHistory(this._range);
+      this._data = this.portfolioId
+        ? await fetchPortfolioValueHistory(this.portfolioId, this._range)
+        : await fetchValueHistory(this._range);
     } catch { /* silencioso */ }
     finally { this._loading = false; }
   }
@@ -244,7 +249,7 @@ export class AcValueChart extends LitElement {
     return html`
       <div class="header">
         <div class="header-left">
-          <span class="label">Valor del portafolio · ${RANGE_TITLES[this._range]}</span>
+          <span class="label">${this.portfolioId ? 'Valor del portfolio' : 'Valor del portafolio'} · ${RANGE_TITLES[this._range]}</span>
           ${!this._loading && this._data.length >= 2 ? html`
             <span class="delta ${up ? 'up' : 'down'}">
               ${up ? '▲' : '▼'} ${Math.abs(delta).toFixed(2)}%

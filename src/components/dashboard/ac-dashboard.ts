@@ -60,7 +60,10 @@ export class AcDashboard extends LitElement {
         ></ac-distribution-chart>
       </div>
 
-      <ac-treemap .assets="${this._app?.assets ?? []}"></ac-treemap>
+      <ac-treemap
+        .assets="${this._app?.assets ?? []}"
+        .portfolios="${this._app?.portfolios ?? []}"
+      ></ac-treemap>
 
       <ac-value-chart style="margin-top: var(--space-4)"></ac-value-chart>
     `;

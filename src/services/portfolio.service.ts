@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/fetch';
 import type { Portfolio, PortfolioSummary } from '@/types/portfolio';
+import type { ValuePoint } from '@/types/asset';
 
 const BASE = '/api/portfolios';
 
@@ -41,4 +42,10 @@ export async function updatePortfolio(
 export async function deletePortfolio(id: string): Promise<void> {
   const res = await apiFetch(`${BASE}/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(`Error deleting portfolio: ${res.status}`);
+}
+
+export async function fetchPortfolioValueHistory(id: string, range = '30d'): Promise<ValuePoint[]> {
+  const res = await apiFetch(`${BASE}/${id}/value-history?range=${encodeURIComponent(range)}`);
+  if (!res.ok) throw new Error(`Error fetching portfolio value history: ${res.status}`);
+  return res.json();
 }

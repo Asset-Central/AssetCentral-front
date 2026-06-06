@@ -40,7 +40,7 @@ export class AcPortfolioForm extends LitElement {
     if (this.initial) {
       this._name = this.initial.name ?? '';
       this._description = this.initial.description ?? '';
-      this._selectedTickers = new Set(this.initial.asset_tickers ?? []);
+      this._selectedTickers = new Set(this.initial.assets?.map(a => a.ticker) ?? []);
     }
   }
 
