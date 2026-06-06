@@ -59,6 +59,8 @@ export class AcProfileComplete extends LitElement {
     }
 
     input {
+      width: 100%;
+      box-sizing: border-box;
       padding: var(--space-3);
       background: var(--color-surface-raised);
       border: 1px solid var(--color-border);
