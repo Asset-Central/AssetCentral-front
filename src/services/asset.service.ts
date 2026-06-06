@@ -1,11 +1,23 @@
 import { apiFetch } from '@/lib/fetch';
-import type { Asset, AssetGroup, AssetType } from '@/types/asset';
+import type { Asset, AssetGroup, AssetType, PricePoint, ValuePoint } from '@/types/asset';
 
 const BASE = '/api/assets';
 
 export async function fetchAssets(): Promise<Asset[]> {
   const res = await apiFetch(BASE);
   if (!res.ok) throw new Error(`Error fetching assets: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchAssetHistory(ticker: string): Promise<PricePoint[]> {
+  const res = await apiFetch(`${BASE}/${encodeURIComponent(ticker)}/history`);
+  if (!res.ok) throw new Error(`Error fetching history: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchValueHistory(): Promise<ValuePoint[]> {
+  const res = await apiFetch(`${BASE}/value-history`);
+  if (!res.ok) throw new Error(`Error fetching value history: ${res.status}`);
   return res.json();
 }
 

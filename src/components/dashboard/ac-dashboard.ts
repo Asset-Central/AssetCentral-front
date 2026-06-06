@@ -7,6 +7,7 @@ import './ac-total-valuation';
 import './ac-performance-badge';
 import './ac-distribution-chart';
 import './ac-treemap';
+import './ac-value-chart';
 import '@/components/common/ac-spinner';
 
 @customElement('ac-dashboard')
@@ -60,6 +61,8 @@ export class AcDashboard extends LitElement {
       </div>
 
       <ac-treemap .assets="${this._app?.assets ?? []}"></ac-treemap>
+
+      <ac-value-chart style="margin-top: var(--space-4)"></ac-value-chart>
     `;
   }
 }

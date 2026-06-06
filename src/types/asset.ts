@@ -17,6 +17,18 @@ export interface Asset {
   unit_price?: number;
   total_valuation?: number;
   recorded_at?: string;
+  daily_change_pct?: number;
+}
+
+export interface PricePoint {
+  date: string;
+  unit_price: number;
+  total_valuation: number;
+}
+
+export interface ValuePoint {
+  date: string;
+  total: number;
 }
 
 export interface AssetGroup {

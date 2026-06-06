@@ -7,7 +7,7 @@ interface Tile {
   asset: Asset;
 }
 
-// Colores consistentes con ac-distribution-chart
+// Colores por tipo (para leyenda)
 const TYPE_COLOR: Record<AssetType, string> = {
   cedear: '#818cf8',
   bono:   '#34d399',
@@ -16,6 +16,17 @@ const TYPE_COLOR: Record<AssetType, string> = {
   stock:  '#f472b6',
   crypto: '#60a5fa',
 };
+
+/** Devuelve color de tile según daily_change_pct: verde si sube, rojo si baja, gris si neutro. */
+function tileColor(pct: number | undefined): string {
+  if (pct == null) return '#4b5563';           // gris neutro
+  if (pct >= 3)    return '#059669';           // verde oscuro
+  if (pct >= 1)    return '#34d399';           // verde medio
+  if (pct >= 0)    return '#6ee7b7';           // verde claro
+  if (pct >= -1)   return '#fca5a5';           // rojo claro
+  if (pct >= -3)   return '#f87171';           // rojo medio
+  return '#dc2626';                            // rojo oscuro
+}
 
 const TYPE_LABEL: Record<AssetType, string> = {
   cedear: 'CEDEARs',
@@ -103,10 +114,17 @@ export class AcTreemap extends LitElement {
         <div class="header">
           <span class="title">Mapa de activos</span>
           <div class="legend">
-            ${usedTypes.map(t => html`
+            ${[
+              { label: '> +3%',   color: '#059669' },
+              { label: '+1–3%',   color: '#34d399' },
+              { label: '0–1%',    color: '#6ee7b7' },
+              { label: '-1–0%',   color: '#fca5a5' },
+              { label: '-3–1%',   color: '#f87171' },
+              { label: '< -3%',   color: '#dc2626' },
+            ].map(l => html`
               <div class="legend-item">
-                <div class="legend-dot" style="background:${TYPE_COLOR[t]}"></div>
-                ${TYPE_LABEL[t] ?? t}
+                <div class="legend-dot" style="background:${l.color}"></div>
+                ${l.label}
               </div>
             `)}
           </div>
@@ -135,7 +153,7 @@ export class AcTreemap extends LitElement {
     const h = Math.max(0, tile.h - GAP * 2);
     if (w < 4 || h < 4) return svg``;
 
-    const color = TYPE_COLOR[tile.asset.asset_type ?? 'stock'] ?? '#818cf8';
+    const color = tileColor(tile.asset.daily_change_pct);
     const pct   = ((tile.asset.total_valuation ?? 0) / total * 100).toFixed(1);
     const fs    = Math.min(w / 4.5, h / 2.2, 20);
     const fsub  = Math.max(fs * 0.58, 9);
