@@ -8,6 +8,8 @@ import '@/components/common/ac-empty-state';
 import '@/components/common/ac-spinner';
 
 const ALL_TYPES: AssetType[] = ['cedear', 'bono', 'fci', 'cash', 'crypto', 'stock'];
+type Range = '1h' | '1d' | '1w' | '30d' | '1y';
+const RANGE_LABELS: Record<Range, string> = { '1h': '1H', '1d': '1D', '1w': '1S', '30d': '1M', '1y': '1A' };
 
 @customElement('ac-asset-list')
 export class AcAssetList extends LitElement {
@@ -16,9 +18,14 @@ export class AcAssetList extends LitElement {
 
     .toolbar {
       display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+    }
+    .toolbar-row {
+      display: flex;
       align-items: center;
       gap: var(--space-3);
-      margin-bottom: var(--space-4);
       flex-wrap: wrap;
     }
 
@@ -53,16 +60,67 @@ export class AcAssetList extends LitElement {
       color: #fff;
     }
 
-    .list { display: flex; flex-direction: column; gap: var(--space-2); }
-
-    .section-label {
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .range-label {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+    .range-btns { display: flex; gap: var(--space-1); }
+    .range-btn {
+      padding: 2px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: transparent;
+      color: var(--color-text-muted);
       font-size: var(--text-xs);
       font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .range-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .range-btn.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+    }
+
+    .list { display: flex; flex-direction: column; gap: var(--space-2); }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) 0 var(--space-1);
+      cursor: pointer;
+      user-select: none;
+      width: fit-content;
+    }
+    .section-header:hover .section-title { color: var(--color-text); }
+    .section-title {
+      font-size: var(--text-xs);
+      font-weight: 700;
       color: var(--color-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      padding: var(--space-2) 0 var(--space-1);
+      transition: color var(--transition-fast);
     }
+    .section-count {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+    .section-arrow {
+      font-size: 9px;
+      color: var(--color-text-muted);
+      transition: transform var(--transition-fast);
+    }
+    .section-arrow.expanded { transform: rotate(0deg); }
+    .section-arrow.collapsed { transform: rotate(-90deg); }
   `;
 
   @consume({ context: appContext, subscribe: true })
@@ -74,6 +132,7 @@ export class AcAssetList extends LitElement {
   @state() private _query = '';
   @state() private _activeType: AssetType | null = null;
   @state() private _openTickers = new Set<string>();
+  @state() private _globalRange: Range = '30d';
 
   private get _source(): Asset[] {
     return this.assets.length > 0 ? this.assets : (this._app?.assets ?? []);
@@ -99,6 +158,15 @@ export class AcAssetList extends LitElement {
   private _onToggleOpen(e: Event) {
     const ticker: string = (e as CustomEvent).detail?.ticker;
     if (ticker) this._toggleCard(ticker);
+  }
+
+  private _closeAll() {
+    this._openTickers = new Set();
+  }
+
+  private _openAllClosed() {
+    const toOpen = this._closedAssets.map(a => a.ticker);
+    this._openTickers = new Set([...this._openTickers, ...toOpen]);
   }
 
   /** Open cards: always shown, sorted alphabetically */
@@ -132,47 +200,89 @@ export class AcAssetList extends LitElement {
     const closedAssets = this._closedAssets;
     const anyOpen      = openAssets.length > 0;
     const anyClosed    = closedAssets.length > 0;
+    const ranges: Range[] = ['1h', '1d', '1w', '30d', '1y'];
 
     return html`
       ${!this.compact ? html`
         <div class="toolbar">
-          <input
-            type="search"
-            placeholder="Buscar por ticker o nombre..."
-            .value="${this._query}"
-            @input="${(e: InputEvent) => (this._query = (e.target as HTMLInputElement).value)}"
-          />
-          <div class="filters">
-            ${ALL_TYPES.map(
-              (t) => html`
+          <div class="toolbar-row">
+            <input
+              type="search"
+              placeholder="Buscar por ticker o nombre..."
+              .value="${this._query}"
+              @input="${(e: InputEvent) => (this._query = (e.target as HTMLInputElement).value)}"
+            />
+            <div class="filters">
+              ${ALL_TYPES.map(
+                (t) => html`
+                  <button
+                    class="filter-btn ${this._activeType === t ? 'active' : ''}"
+                    @click="${() => (this._activeType = this._activeType === t ? null : t)}"
+                  >${t}</button>
+                `
+              )}
+            </div>
+          </div>
+          <div class="range-row">
+            <span class="range-label">Rango global:</span>
+            <div class="range-btns">
+              ${ranges.map(r => html`
                 <button
-                  class="filter-btn ${this._activeType === t ? 'active' : ''}"
-                  @click="${() => (this._activeType = this._activeType === t ? null : t)}"
-                >${t}</button>
-              `
-            )}
+                  class="range-btn ${this._globalRange === r ? 'active' : ''}"
+                  @click="${() => { this._globalRange = r; }}"
+                >${RANGE_LABELS[r]}</button>
+              `)}
+            </div>
           </div>
         </div>
       ` : ''}
 
       <div class="list" @toggle-open="${this._onToggleOpen}">
-        ${anyOpen ? html`
-          ${!this.compact && anyClosed ? html`<div class="section-label">Abiertos</div>` : ''}
+        ${!this.compact ? html`
+          <!-- Sección Abiertos -->
+          <div class="section-header" @click="${this._closeAll}">
+            <span class="section-arrow ${anyOpen ? 'expanded' : 'collapsed'}">▼</span>
+            <span class="section-title">Abiertos</span>
+            <span class="section-count">(${openAssets.length})</span>
+          </div>
           ${openAssets.map(a => html`
-            <ac-asset-card .asset="${a}" .open="${true}"></ac-asset-card>
+            <ac-asset-card
+              .asset="${a}"
+              .open="${true}"
+              .globalRange="${this._globalRange}"
+            ></ac-asset-card>
           `)}
-        ` : ''}
 
-        ${anyClosed ? html`
-          ${!this.compact && anyOpen ? html`<div class="section-label">Cerrados</div>` : ''}
+          <!-- Sección Cerrados -->
+          <div class="section-header" @click="${this._openAllClosed}">
+            <span class="section-arrow ${anyClosed ? 'expanded' : 'collapsed'}">▼</span>
+            <span class="section-title">Cerrados</span>
+            <span class="section-count">(${closedAssets.length})</span>
+          </div>
           ${closedAssets.map(a => html`
-            <ac-asset-card .asset="${a}" .open="${false}"></ac-asset-card>
+            <ac-asset-card
+              .asset="${a}"
+              .open="${false}"
+              .globalRange="${this._globalRange}"
+            ></ac-asset-card>
           `)}
-        ` : ''}
 
-        ${!anyOpen && !anyClosed
-          ? html`<ac-empty-state icon="◎" title="Sin activos" message="No hay activos que coincidan con el filtro."></ac-empty-state>`
-          : ''}
+          ${!anyOpen && !anyClosed ? html`
+            <ac-empty-state icon="◎" title="Sin activos" message="No hay activos que coincidan con el filtro."></ac-empty-state>
+          ` : ''}
+        ` : html`
+          <!-- Compact mode: no section headers, just all cards -->
+          ${[...openAssets, ...closedAssets].map(a => html`
+            <ac-asset-card
+              .asset="${a}"
+              .open="${this._openTickers.has(a.ticker)}"
+              .globalRange="${this._globalRange}"
+            ></ac-asset-card>
+          `)}
+          ${!anyOpen && !anyClosed ? html`
+            <ac-empty-state icon="◎" title="Sin activos" message="No hay activos que coincidan con el filtro."></ac-empty-state>
+          ` : ''}
+        `}
       </div>
     `;
   }

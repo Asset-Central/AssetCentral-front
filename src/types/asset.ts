@@ -31,6 +31,11 @@ export interface ValuePoint {
   total: number;
 }
 
+export interface InflationPoint {
+  date: string;  // "YYYY-MM"
+  rate: number;  // monthly % change
+}
+
 export interface AssetGroup {
   type: AssetType;
   total_valuation: number;

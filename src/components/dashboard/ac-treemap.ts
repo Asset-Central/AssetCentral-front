@@ -219,13 +219,13 @@ export class AcTreemap extends LitElement {
     const color = tileColor(tile.asset.daily_change_pct);
     const pct   = ((tile.asset.total_valuation ?? 0) / total * 100).toFixed(1);
 
-    // Scale font with tile size; cap at 20px
-    const fs    = Math.min(w / 5, h / 2.5, 20);
+    // Scale font proportionally with tile size — larger tiles get larger text
+    const fs    = Math.min(w / 4.5, h / 2.2, 40);
     const fsub  = Math.max(fs * 0.65, 9);
 
     // Only show text labels for tiles large enough to be legible
-    const showLabel = w > 60 && h > 30;
-    const showPct   = w > 80 && h > 50;
+    const showLabel = w > 60 && h > 30 && fs >= 9;
+    const showPct   = w > 90 && h > 55;
     const midY = showPct ? y + h / 2 - fsub * 0.4 : y + h / 2;
 
     return svg`

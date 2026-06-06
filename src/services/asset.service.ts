@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/fetch';
-import type { Asset, AssetGroup, AssetType, PricePoint, ValuePoint } from '@/types/asset';
+import type { Asset, AssetGroup, AssetType, InflationPoint, PricePoint, ValuePoint } from '@/types/asset';
 
 const BASE = '/api/assets';
 
@@ -9,17 +9,21 @@ export async function fetchAssets(): Promise<Asset[]> {
   return res.json();
 }
 
-export async function fetchAssetHistory(ticker: string, range?: string): Promise<PricePoint[]> {
-  const query = range ? `?range=${encodeURIComponent(range)}` : '';
-  const res = await apiFetch(`${BASE}/${encodeURIComponent(ticker)}/history${query}`);
+export async function fetchAssetHistory(ticker: string, range = '30d'): Promise<PricePoint[]> {
+  const res = await apiFetch(`${BASE}/${encodeURIComponent(ticker)}/history?range=${encodeURIComponent(range)}`);
   if (!res.ok) throw new Error(`Error fetching history: ${res.status}`);
   return res.json();
 }
 
-export async function fetchValueHistory(range?: string): Promise<ValuePoint[]> {
-  const query = range ? `?range=${encodeURIComponent(range)}` : '';
-  const res = await apiFetch(`${BASE}/value-history${query}`);
+export async function fetchValueHistory(range = '30d'): Promise<ValuePoint[]> {
+  const res = await apiFetch(`${BASE}/value-history?range=${encodeURIComponent(range)}`);
   if (!res.ok) throw new Error(`Error fetching value history: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchInflation(currency: string): Promise<InflationPoint[]> {
+  const res = await apiFetch(`${BASE}/inflation?currency=${encodeURIComponent(currency)}`);
+  if (!res.ok) throw new Error(`Error fetching inflation: ${res.status}`);
   return res.json();
 }
 
