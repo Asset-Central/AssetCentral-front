@@ -9,14 +9,16 @@ export async function fetchAssets(): Promise<Asset[]> {
   return res.json();
 }
 
-export async function fetchAssetHistory(ticker: string): Promise<PricePoint[]> {
-  const res = await apiFetch(`${BASE}/${encodeURIComponent(ticker)}/history`);
+export async function fetchAssetHistory(ticker: string, range?: string): Promise<PricePoint[]> {
+  const query = range ? `?range=${encodeURIComponent(range)}` : '';
+  const res = await apiFetch(`${BASE}/${encodeURIComponent(ticker)}/history${query}`);
   if (!res.ok) throw new Error(`Error fetching history: ${res.status}`);
   return res.json();
 }
 
-export async function fetchValueHistory(): Promise<ValuePoint[]> {
-  const res = await apiFetch(`${BASE}/value-history`);
+export async function fetchValueHistory(range?: string): Promise<ValuePoint[]> {
+  const query = range ? `?range=${encodeURIComponent(range)}` : '';
+  const res = await apiFetch(`${BASE}/value-history${query}`);
   if (!res.ok) throw new Error(`Error fetching value history: ${res.status}`);
   return res.json();
 }

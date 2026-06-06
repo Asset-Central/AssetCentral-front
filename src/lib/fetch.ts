@@ -17,5 +17,10 @@ export async function apiFetch(url: string, init: RequestInit = {}): Promise<Res
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  return fetch(url, { ...init, headers });
+  const apiBase = import.meta.env.VITE_API_URL || '';
+  const targetUrl = apiBase
+    ? `${apiBase.replace(/\/$/, '')}/${url.replace(/^\//, '')}`
+    : url;
+
+  return fetch(targetUrl, { ...init, headers });
 }
