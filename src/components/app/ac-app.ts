@@ -56,7 +56,9 @@ export class AcApp extends LitElement {
       this._authenticated = !!session;
       this._state = { ...this._state, session: session ?? null, user: session?.user ?? null };
 
-      if (event === 'SIGNED_IN' && !wasAuth) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !wasAuth) {
+        // SIGNED_IN   → login nuevo
+        // INITIAL_SESSION → recarga de página con sesión persistida en localStorage
         this._loadData();
         if (window.location.pathname === '/login') Router.go('/dashboard');
       }
@@ -71,19 +73,8 @@ export class AcApp extends LitElement {
 
   firstUpdated() {
     this._setupRouter();
-
-    // Sesión persistida (recarga de página)
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        this._authenticated = true;
-        this._state = {
-          ...this._state,
-          session: data.session,
-          user: data.session.user,
-        };
-        this._loadData();
-      }
-    });
+    // La sesión persistida se maneja vía onAuthStateChange(INITIAL_SESSION)
+    // que dispara Supabase automáticamente al inicializar desde localStorage.
   }
 
   private _setupRouter() {
@@ -95,8 +86,13 @@ export class AcApp extends LitElement {
       {
         path: '/',
         action: async (_ctx, commands) => {
-          const { data } = await supabase.auth.getSession();
-          if (!data.session) return commands.redirect('/login');
+          try {
+            const { data } = await supabase.auth.getSession();
+            if (!data.session) return commands.redirect('/login');
+          } catch {
+            // Si Supabase falla (ej: .env no configurado), mandamos al login
+            return commands.redirect('/login');
+          }
           return undefined;
         },
         children: [
