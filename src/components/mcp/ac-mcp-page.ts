@@ -1,8 +1,32 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
+import { supabase } from '@/lib/supabase';
 
 @customElement('ac-mcp-page')
 export class AcMcpPage extends LitElement {
+  @state() private _token = '<supabase-jwt>';
+  @state() private _copied = false;
+
+  private get _backendUrl(): string {
+    const env = import.meta.env.VITE_API_URL as string | undefined;
+    return env ? env.replace(/\/$/, '') : window.location.origin;
+  }
+
+  private get _mcpUrl(): string {
+    return `${this._backendUrl}/mcp`;
+  }
+
+  async connectedCallback() {
+    super.connectedCallback();
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.access_token) this._token = data.session.access_token;
+  }
+
+  private async _copy(text: string) {
+    await navigator.clipboard.writeText(text);
+    this._copied = true;
+    setTimeout(() => { this._copied = false; }, 1500);
+  }
   static styles = css`
     :host { display: block; }
 
@@ -210,6 +234,18 @@ export class AcMcpPage extends LitElement {
       font-size: var(--text-xs);
       color: var(--color-text-subtle);
     }
+
+    .copy-btn {
+      font-size: var(--text-xs);
+      padding: 3px var(--space-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { background: var(--color-surface-raised); color: var(--color-text); }
   `;
 
   render() {
@@ -236,8 +272,11 @@ export class AcMcpPage extends LitElement {
 
         <p>URL del servidor:</p>
         <div class="url-block">
-          <code>https://&lt;backend-url&gt;/mcp</code>
+          <code>${this._mcpUrl}</code>
           <span class="badge">HTTP / SSE</span>
+          <button class="copy-btn" @click="${() => this._copy(this._mcpUrl)}">
+            ${this._copied ? 'Copiado' : 'Copiar'}
+          </button>
         </div>
 
         <p>Configuración en Claude Desktop o cualquier cliente MCP compatible:</p>
@@ -245,13 +284,16 @@ export class AcMcpPage extends LitElement {
   <span class="key">"mcpServers"</span><span class="punct">:</span> <span class="punct">{</span>
     <span class="key">"assetcentral"</span><span class="punct">:</span> <span class="punct">{</span>
       <span class="key">"type"</span><span class="punct">:</span>    <span class="str">"http"</span><span class="punct">,</span>
-      <span class="key">"url"</span><span class="punct">:</span>     <span class="str">"https://&lt;backend-url&gt;/mcp"</span><span class="punct">,</span>
+      <span class="key">"url"</span><span class="punct">:</span>     <span class="str">"${this._mcpUrl}"</span><span class="punct">,</span>
       <span class="key">"headers"</span><span class="punct">:</span> <span class="punct">{</span>
-        <span class="key">"Authorization"</span><span class="punct">:</span> <span class="str">"Bearer &lt;supabase-jwt&gt;"</span>
+        <span class="key">"Authorization"</span><span class="punct">:</span> <span class="str">"Bearer ${this._token.length > 40 ? this._token.slice(0, 40) + '...' : this._token}"</span>
       <span class="punct">}</span>
     <span class="punct">}</span>
   <span class="punct">}</span>
 <span class="punct">}</span></div>
+        <button class="copy-btn" style="margin-top:var(--space-2)" @click="${() => this._copy(`{\n  "mcpServers": {\n    "assetcentral": {\n      "type": "http",\n      "url": "${this._mcpUrl}",\n      "headers": { "Authorization": "Bearer ${this._token}" }\n    }\n  }\n}`)}">
+          Copiar configuración completa
+        </button>
 
         <p>
           El token JWT se obtiene del cliente Supabase al iniciar sesión.
