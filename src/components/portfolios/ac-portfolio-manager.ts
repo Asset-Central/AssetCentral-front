@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, type PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
 import { appContext, type AppState } from '@/store/app.context';
@@ -35,12 +35,35 @@ export class AcPortfolioManager extends LitElement {
   @state() private _loading = true;
   @state() private _showCreate = false;
 
-  async connectedCallback() {
+  private _summariesLoaded = false;
+
+  connectedCallback() {
     super.connectedCallback();
-    await this._loadSummaries();
+  }
+
+  // Called by Vaadin Router on every navigation to this route (including back/forward)
+  onAfterEnter() {
+    this._summariesLoaded = false;
+    this._loading = true;
+    // If app data is already available (e.g. back-navigation), load immediately
+    if (!this._app?.isLoading) {
+      this._loadSummaries();
+    }
+    // Otherwise updated() will trigger once isLoading transitions false
+  }
+
+  updated(changed: PropertyValues) {
+    if (changed.has('_app') && !this._summariesLoaded && this._loading) {
+      const prev = changed.get('_app') as AppState | undefined;
+      // Trigger when app finishes loading for the first time on this route
+      if (prev?.isLoading === true && this._app?.isLoading === false) {
+        this._loadSummaries();
+      }
+    }
   }
 
   private async _loadSummaries() {
+    this._summariesLoaded = true;
     this._loading = true;
     const portfolios = this._app?.portfolios ?? [];
     this._summaries = await Promise.all(portfolios.map((p) => fetchPortfolioSummary(p.id)));
@@ -50,6 +73,7 @@ export class AcPortfolioManager extends LitElement {
   private async _onCreate(e: CustomEvent) {
     await createPortfolio(e.detail);
     this._showCreate = false;
+    this._summariesLoaded = false;
     await this._loadSummaries();
   }
 

@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
-import { Router } from '@vaadin/router';
+import { Router, type RouterLocation } from '@vaadin/router';
 import { appContext, type AppState } from '@/store/app.context';
 import { fetchPortfolioSummary, updatePortfolio, deletePortfolio } from '@/services/portfolio.service';
 import type { PortfolioSummary, PortfolioAssetSummary } from '@/types/portfolio';
@@ -90,14 +90,15 @@ export class AcPortfolioDetail extends LitElement {
   @state() private _loading = true;
   @state() private _showEdit = false;
 
-  location?: { params: { id: string } };
+  // Called by Vaadin Router on every navigation (initial load + back/forward)
+  async onAfterEnter(location: RouterLocation) {
+    const id = location.params.id as string;
+    await this._load(id);
+  }
 
-  async connectedCallback() {
-    super.connectedCallback();
-    const id = this.location?.params?.id;
-    if (id) {
-      this._summary = await fetchPortfolioSummary(id);
-    }
+  private async _load(id: string) {
+    this._loading = true;
+    this._summary = await fetchPortfolioSummary(id);
     this._loading = false;
   }
 
@@ -110,10 +111,10 @@ export class AcPortfolioDetail extends LitElement {
 
   private async _onEdit(e: CustomEvent) {
     if (!this._summary) return;
-    await updatePortfolio(this._summary.portfolio.id, e.detail);
+    const id = this._summary.portfolio.id;
+    await updatePortfolio(id, e.detail);
     this._showEdit = false;
-    // Reload summary after edit
-    this._summary = await fetchPortfolioSummary(this._summary.portfolio.id);
+    await this._load(id);
   }
 
   render() {

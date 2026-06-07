@@ -29,15 +29,80 @@ export class AcApp extends LitElement {
     :host { display: flex; height: 100%; }
     .shell { display: flex; width: 100%; height: 100%; }
     .content { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+    /* ── Nav drawer ── */
+    .nav-drawer {
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: width 0.25s ease;
+      width: var(--nav-width, 220px);
+    }
+    .nav-drawer.closed { width: 0; }
+
+    /* Mobile: fixed overlay */
+    @media (max-width: 767px) {
+      .nav-drawer {
+        position: fixed;
+        top: 0; left: 0;
+        height: 100%;
+        z-index: 200;
+        width: var(--nav-width, 220px) !important;
+        transform: translateX(0);
+        transition: transform 0.25s ease;
+      }
+      .nav-drawer.closed {
+        transform: translateX(-100%);
+        width: var(--nav-width, 220px) !important;
+      }
+    }
+
+    /* Backdrop (mobile only) */
+    .nav-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 199;
+      cursor: pointer;
+    }
+    @media (max-width: 767px) {
+      .nav-backdrop.visible { display: block; }
+    }
+
+    /* ── Topbar ── */
     .topbar {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
       gap: var(--space-3);
-      padding: var(--space-3) var(--space-6);
+      padding: var(--space-3) var(--space-4);
       border-bottom: 1px solid var(--color-border);
       background: var(--color-surface);
       flex-shrink: 0;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-left: auto;
+    }
+    .hamburger {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px; height: 32px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--color-text-muted);
+      border-radius: var(--radius-md);
+      padding: 0;
+      flex-shrink: 0;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .hamburger:hover {
+      background: var(--color-surface-raised);
+      color: var(--color-text);
     }
     .topbar-email {
       font-size: var(--text-sm);
@@ -78,14 +143,19 @@ export class AcApp extends LitElement {
   @state() private _authChecking = true;
   @state() private _authenticated = false;
   @state() private _needsProfile = false;
+  @state() private _navOpen = !window.matchMedia('(max-width: 767px)').matches;
 
   private _router?: Router;
   private _onDataRefresh = () => { if (this._authenticated) this._loadData(); };
+  private _onRouteChange = () => {
+    if (window.matchMedia('(max-width: 767px)').matches) this._navOpen = false;
+  };
 
   connectedCallback() {
     super.connectedCallback();
 
     window.addEventListener('ac-data-refresh', this._onDataRefresh);
+    window.addEventListener('vaadin-router-location-changed', this._onRouteChange);
 
     supabase.auth.onAuthStateChange((event, session) => {
       const wasAuth = this._authenticated;
@@ -176,15 +246,28 @@ export class AcApp extends LitElement {
 
     return html`
       <div class="shell">
-        <ac-nav></ac-nav>
+        <div
+          class="nav-backdrop ${this._navOpen ? 'visible' : ''}"
+          @click="${() => { this._navOpen = false; }}"
+        ></div>
+        <div class="nav-drawer ${this._navOpen ? 'open' : 'closed'}">
+          <ac-nav></ac-nav>
+        </div>
         <div class="content">
           <div class="topbar">
-            ${this._state.user?.email ? html`
-              <span class="topbar-email">${this._state.user.email}</span>
-            ` : ''}
-            <button class="topbar-logout" @click="${() => signOut()}">
-              <span>⎋</span> Cerrar sesión
-            </button>
+            <button
+              class="hamburger"
+              title="${this._navOpen ? 'Ocultar menú' : 'Mostrar menú'}"
+              @click="${() => { this._navOpen = !this._navOpen; }}"
+            >☰</button>
+            <div class="topbar-right">
+              ${this._state.user?.email ? html`
+                <span class="topbar-email">${this._state.user.email}</span>
+              ` : ''}
+              <button class="topbar-logout" @click="${() => signOut()}">
+                <span>⎋</span> Cerrar sesión
+              </button>
+            </div>
           </div>
           <main class="main">
             <div id="outlet"></div>
