@@ -19,6 +19,7 @@ import '@/components/accounts/ac-accounts-page';
 import '@/components/portfolios/ac-portfolio-manager';
 import '@/components/portfolios/ac-portfolio-detail';
 import '@/components/mcp/ac-mcp-page';
+import '@/components/mcp/ac-mcp-auth';
 import '@/components/market/ac-market-page';
 import '@/components/profile/ac-financial-profile';
 import '@/components/settings/ac-settings-page';
@@ -209,6 +210,7 @@ export class AcApp extends LitElement {
         { path: '/portfolios',     component: 'ac-portfolio-manager' },
         { path: '/portfolios/:id', component: 'ac-portfolio-detail' },
         { path: '/mcp',            component: 'ac-mcp-page' },
+        { path: '/mcp-auth',       component: 'ac-mcp-auth' },
         { path: '/profile',        component: 'ac-financial-profile' },
         { path: '/settings',       component: 'ac-settings-page' },
       ]);
