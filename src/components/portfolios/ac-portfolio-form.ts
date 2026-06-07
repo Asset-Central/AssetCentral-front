@@ -50,14 +50,16 @@ export class AcPortfolioForm extends LitElement {
     this._selectedTickers = s;
   }
 
-  private _submit(e: Event) {
-    e.preventDefault();
+  private _submit(e?: Event) {
+    e?.preventDefault();
+    if (!this._name.trim()) return;
+    const assetMap = new Map(this.availableAssets.map(a => [a.ticker, a.platform]));
+    const assets = Array.from(this._selectedTickers).map(ticker => ({
+      ticker,
+      platform: assetMap.get(ticker) ?? this.initial?.assets?.find(a => a.ticker === ticker)?.platform ?? 'iol',
+    }));
     this.dispatchEvent(new CustomEvent('ac-portfolio-submit', {
-      detail: {
-        name: this._name,
-        description: this._description,
-        asset_tickers: Array.from(this._selectedTickers),
-      },
+      detail: { name: this._name, description: this._description, assets },
       bubbles: true, composed: true,
     }));
   }
@@ -87,8 +89,8 @@ export class AcPortfolioForm extends LitElement {
           </div>
         </label>
         <div class="actions">
-          <ac-button variant="ghost" type="button" @click="${() => this.dispatchEvent(new CustomEvent('ac-cancel', { bubbles: true, composed: true }))}">Cancelar</ac-button>
-          <ac-button variant="primary" type="submit">Guardar</ac-button>
+          <ac-button variant="ghost" @click="${() => this.dispatchEvent(new CustomEvent('ac-cancel', { bubbles: true, composed: true }))}">Cancelar</ac-button>
+          <ac-button variant="primary" @click="${this._submit}">Guardar</ac-button>
         </div>
       </form>
     `;

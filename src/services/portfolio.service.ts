@@ -17,7 +17,7 @@ export async function fetchPortfolioSummary(id: string): Promise<PortfolioSummar
 }
 
 export async function createPortfolio(
-  data: Pick<Portfolio, 'name' | 'description' | 'asset_tickers'>
+  data: { name: string; description?: string; assets: { ticker: string; platform: string }[] }
 ): Promise<Portfolio> {
   const res = await apiFetch(BASE, {
     method: 'POST',
@@ -29,7 +29,7 @@ export async function createPortfolio(
 
 export async function updatePortfolio(
   id: string,
-  data: Partial<Pick<Portfolio, 'name' | 'description' | 'asset_tickers'>>
+  data: { name?: string; description?: string; assets?: { ticker: string; platform: string }[] }
 ): Promise<Portfolio> {
   const res = await apiFetch(`${BASE}/${id}`, {
     method: 'PATCH',
