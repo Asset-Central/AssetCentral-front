@@ -273,31 +273,28 @@ export class AcMcpPage extends LitElement {
         <p>URL del servidor:</p>
         <div class="url-block">
           <code>${this._mcpUrl}</code>
-          <span class="badge">HTTP / SSE</span>
+          <span class="badge">Streamable HTTP</span>
           <button class="copy-btn" @click="${() => this._copy(this._mcpUrl)}">
             ${this._copied ? 'Copiado' : 'Copiar'}
           </button>
         </div>
 
-        <p>Configuración en Claude Desktop o cualquier cliente MCP compatible:</p>
+        <p>Configuración en Claude Code o cualquier cliente MCP compatible:</p>
         <div class="code-block"><span class="punct">{</span>
   <span class="key">"mcpServers"</span><span class="punct">:</span> <span class="punct">{</span>
     <span class="key">"assetcentral"</span><span class="punct">:</span> <span class="punct">{</span>
-      <span class="key">"type"</span><span class="punct">:</span>    <span class="str">"http"</span><span class="punct">,</span>
-      <span class="key">"url"</span><span class="punct">:</span>     <span class="str">"${this._mcpUrl}"</span><span class="punct">,</span>
-      <span class="key">"headers"</span><span class="punct">:</span> <span class="punct">{</span>
-        <span class="key">"Authorization"</span><span class="punct">:</span> <span class="str">"Bearer ${this._token.length > 40 ? this._token.slice(0, 40) + '...' : this._token}"</span>
-      <span class="punct">}</span>
+      <span class="key">"type"</span><span class="punct">:</span> <span class="str">"http"</span><span class="punct">,</span>
+      <span class="key">"url"</span><span class="punct">:</span>  <span class="str">"${this._mcpUrl}"</span>
     <span class="punct">}</span>
   <span class="punct">}</span>
 <span class="punct">}</span></div>
-        <button class="copy-btn" style="margin-top:var(--space-2)" @click="${() => this._copy(`{\n  "mcpServers": {\n    "assetcentral": {\n      "type": "http",\n      "url": "${this._mcpUrl}",\n      "headers": { "Authorization": "Bearer ${this._token}" }\n    }\n  }\n}`)}">
-          Copiar configuración completa
+        <button class="copy-btn" style="margin-top:var(--space-2)" @click="${() => this._copy(`{\n  "mcpServers": {\n    "assetcentral": {\n      "type": "http",\n      "url": "${this._mcpUrl}"\n    }\n  }\n}`)}">
+          Copiar configuración
         </button>
 
         <p>
-          El token JWT se obtiene del cliente Supabase al iniciar sesión.
-          Cada tool call propaga el header <code>Authorization</code> automáticamente hacia el backend.
+          La autenticación es automática vía OAuth: la primera vez que conectes, Claude Code
+          abrirá el navegador para que autorices el acceso. La sesión se renueva sola.
         </p>
       </div>
 
