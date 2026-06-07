@@ -60,17 +60,13 @@ export class AcDashboard extends LitElement {
         style="margin-bottom: var(--space-4);"
       ></ac-total-valuation>
 
-      <ac-value-chart style="margin-bottom: var(--space-4);"></ac-value-chart>
-
       <div class="layout">
-        <!-- Main column: treemap + performance chart -->
+        <!-- Main column: treemap -->
         <div class="main">
           <ac-treemap
             .assets="${this._app?.assets ?? []}"
             .portfolios="${this._app?.portfolios ?? []}"
           ></ac-treemap>
-
-          <ac-performance-chart></ac-performance-chart>
         </div>
 
         <!-- Sidebar: distribution + daily badge -->
@@ -84,6 +80,8 @@ export class AcDashboard extends LitElement {
           ></ac-performance-badge>
         </div>
       </div>
+
+      <ac-performance-chart style="margin-top: var(--space-4);"></ac-performance-chart>
     `;
   }
 }
