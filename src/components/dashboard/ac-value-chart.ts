@@ -90,7 +90,7 @@ export class AcValueChart extends LitElement {
       border-color: var(--color-primary);
       color: #fff;
     }
-    canvas { display: block; max-height: 160px; }
+    canvas { display: block; max-height: 220px; }
     .loading {
       display: flex; align-items: center; justify-content: center;
       height: 160px;

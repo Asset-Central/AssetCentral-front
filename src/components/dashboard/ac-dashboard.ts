@@ -60,6 +60,8 @@ export class AcDashboard extends LitElement {
         style="margin-bottom: var(--space-4);"
       ></ac-total-valuation>
 
+      <ac-value-chart style="margin-bottom: var(--space-4);"></ac-value-chart>
+
       <div class="layout">
         <!-- Main column: treemap + performance chart -->
         <div class="main">
