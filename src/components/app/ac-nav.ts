@@ -7,14 +7,18 @@ interface NavItem {
   icon: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const MAIN_NAV_ITEMS: NavItem[] = [
   { path: '/dashboard',  label: 'Dashboard',  icon: '◎' },
   { path: '/assets',     label: 'Activos',    icon: '◈' },
   { path: '/market',     label: 'Mercado',    icon: '◱' },
   { path: '/accounts',   label: 'Cuentas',    icon: '◉' },
   { path: '/portfolios', label: 'Portfolios', icon: '❏' },
   { path: '/mcp',        label: 'MCP',        icon: '⬡' },
-  { path: '/profile',    label: 'Mi Perfil',  icon: '◷' },
+];
+
+const BOTTOM_NAV_ITEMS: NavItem[] = [
+  { path: '/profile',  label: 'Mi Perfil',     icon: '◷' },
+  { path: '/settings', label: 'Configuración', icon: '⚙' },
 ];
 
 @customElement('ac-nav')
@@ -31,18 +35,20 @@ export class AcNav extends LitElement {
       flex-shrink: 0;
     }
 
+    /* Logo — explicit hover without background box */
     .logo {
       display: block;
-      padding: 0 var(--space-6) var(--space-8);
+      padding: 0 var(--space-6) var(--space-6);
       font-size: var(--text-xl);
       font-weight: 700;
       color: var(--color-text);
       letter-spacing: -0.02em;
       text-decoration: none;
       cursor: pointer;
+      transition: opacity var(--transition-fast);
     }
     .logo span { color: var(--color-primary-light); }
-    .logo:hover { opacity: 0.85; }
+    .logo:hover { opacity: 0.8; }
 
     nav {
       display: flex;
@@ -52,7 +58,8 @@ export class AcNav extends LitElement {
       flex: 1;
     }
 
-    a {
+    /* Scope hover/active ONLY to nav links, never the logo */
+    nav a {
       display: flex;
       align-items: center;
       gap: var(--space-3);
@@ -64,11 +71,11 @@ export class AcNav extends LitElement {
       font-weight: 500;
       transition: background var(--transition-fast), color var(--transition-fast);
     }
-    a:hover {
+    nav a:hover {
       background: var(--color-surface-raised);
       color: var(--color-text);
     }
-    a.active {
+    nav a.active {
       background: color-mix(in srgb, var(--color-primary) 15%, transparent);
       color: var(--color-primary-light);
     }
@@ -77,8 +84,17 @@ export class AcNav extends LitElement {
       font-size: var(--text-lg);
       width: 20px;
       text-align: center;
+      flex-shrink: 0;
     }
 
+    /* Push bottom items to the bottom */
+    .spacer { flex: 1; min-height: var(--space-4); }
+
+    .nav-divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: var(--space-2) 0;
+    }
   `;
 
   @property({ type: String })
@@ -102,17 +118,28 @@ export class AcNav extends LitElement {
     return html`
       <a class="logo" href="/dashboard">Asset<span>Central</span></a>
       <nav>
-        ${NAV_ITEMS.map(
-          (item) => html`
-            <a
-              href="${item.path}"
-              class="${this.activePath.startsWith(item.path) ? 'active' : ''}"
-            >
-              <span class="icon">${item.icon}</span>
-              ${item.label}
-            </a>
-          `
-        )}
+        ${MAIN_NAV_ITEMS.map(item => html`
+          <a
+            href="${item.path}"
+            class="${this.activePath.startsWith(item.path) ? 'active' : ''}"
+          >
+            <span class="icon">${item.icon}</span>
+            ${item.label}
+          </a>
+        `)}
+
+        <div class="spacer"></div>
+        <div class="nav-divider"></div>
+
+        ${BOTTOM_NAV_ITEMS.map(item => html`
+          <a
+            href="${item.path}"
+            class="${this.activePath.startsWith(item.path) ? 'active' : ''}"
+          >
+            <span class="icon">${item.icon}</span>
+            ${item.label}
+          </a>
+        `)}
       </nav>
     `;
   }

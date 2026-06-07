@@ -21,6 +21,7 @@ import '@/components/portfolios/ac-portfolio-detail';
 import '@/components/mcp/ac-mcp-page';
 import '@/components/market/ac-market-page';
 import '@/components/profile/ac-financial-profile';
+import '@/components/settings/ac-settings-page';
 import '@/components/common/ac-spinner';
 
 @customElement('ac-app')
@@ -208,6 +209,7 @@ export class AcApp extends LitElement {
         { path: '/portfolios/:id', component: 'ac-portfolio-detail' },
         { path: '/mcp',            component: 'ac-mcp-page' },
         { path: '/profile',        component: 'ac-financial-profile' },
+        { path: '/settings',       component: 'ac-settings-page' },
       ]);
     }
   }
