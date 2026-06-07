@@ -76,13 +76,13 @@ export class AcAccountCard extends LitElement {
   }
 
   render() {
-    const { platform, label, connection_status, last_sync } = this.account;
+    const { platform, nombre, label, connection_status, last_sync } = this.account;
     const syncDate = last_sync ? new Date(last_sync).toLocaleString('es-AR') : 'Nunca';
     const needsReauth = connection_status === 'requires_reauthentication';
     return html`
       <div class="row">
         <div>
-          <div class="platform">${platform}</div>
+          <div class="platform">${nombre ?? platform}</div>
           <div class="label">${label ?? ''} · Última sync: ${syncDate}</div>
         </div>
         <span class="status ${connection_status}">

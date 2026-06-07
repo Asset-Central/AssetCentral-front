@@ -5,6 +5,7 @@ export type ConnectionStatus = 'active' | 'requires_reauthentication' | 'error';
 export interface Account {
   id: string;
   platform: Platform;
+  nombre?: string;
   label?: string;
   connection_status: ConnectionStatus;
   last_sync: string | null;

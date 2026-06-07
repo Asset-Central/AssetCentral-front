@@ -6,7 +6,7 @@ import './ac-credential-form';
 import '@/components/common/ac-spinner';
 import '@/components/common/ac-button';
 
-type WizardStep = 'select' | 'credentials';
+type WizardStep = 'select' | 'name' | 'credentials';
 
 @customElement('ac-link-wizard')
 export class AcLinkWizard extends LitElement {
@@ -28,6 +28,19 @@ export class AcLinkWizard extends LitElement {
     }
     .platform-btn:hover { border-color: var(--color-primary-light); color: var(--color-primary-light); }
     .back { margin-bottom: var(--space-4); }
+    .name-step { display: flex; flex-direction: column; gap: var(--space-4); }
+    .name-step label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); font-weight: 500; }
+    .name-step input {
+      padding: var(--space-2) var(--space-3);
+      background: var(--color-surface-raised);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+    }
+    .name-step input:focus { outline: 2px solid var(--color-primary); }
+    .name-step .actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-2); }
   `;
 
   /** Cuando se pasa, salta la selección de plataforma (flujo reconectar). */
@@ -36,6 +49,7 @@ export class AcLinkWizard extends LitElement {
   @state() private _step: WizardStep = 'select';
   @state() private _platforms: PlatformConfig[] = [];
   @state() private _selected?: PlatformConfig;
+  @state() private _nombre = '';
   @state() private _loading = true;
   @state() private _submitting = false;
   @state() private _formError = '';
@@ -50,6 +64,7 @@ export class AcLinkWizard extends LitElement {
       const found = this._platforms.find(p => p.platform === this.prefillPlatform);
       if (found) {
         this._selected = found;
+        this._nombre = found.display_name;
         this._step = 'credentials';
       }
     }
@@ -57,8 +72,9 @@ export class AcLinkWizard extends LitElement {
 
   private _select(p: PlatformConfig) {
     this._selected = p;
+    this._nombre = p.display_name;
     this._formError = '';
-    this._step = 'credentials';
+    this._step = 'name';
   }
 
   private async _onSubmit(e: CustomEvent) {
@@ -66,7 +82,7 @@ export class AcLinkWizard extends LitElement {
     this._submitting = true;
     this._formError = '';
     try {
-      const account = await linkAccount(platform, credentials);
+      const account = await linkAccount(platform, this._nombre, credentials);
       this.dispatchEvent(new CustomEvent('ac-account-linked', {
         detail: account, bubbles: true, composed: true,
       }));
@@ -80,11 +96,35 @@ export class AcLinkWizard extends LitElement {
   render() {
     if (this._loading) return html`<ac-spinner></ac-spinner>`;
 
+    if (this._step === 'name' && this._selected) {
+      return html`
+        <div class="back">
+          <ac-button variant="ghost" @click="${() => { this._step = 'select'; this._formError = ''; }}">← Volver</ac-button>
+        </div>
+        <div class="name-step">
+          <label>
+            Nombre de la cuenta
+            <input
+              type="text"
+              .value="${this._nombre}"
+              @input="${(e: InputEvent) => this._nombre = (e.target as HTMLInputElement).value}"
+              placeholder="${this._selected.display_name}"
+              autocomplete="off"
+            />
+          </label>
+          <div class="actions">
+            <ac-button variant="ghost" @click="${() => this.dispatchEvent(new CustomEvent('ac-cancel', { bubbles: true, composed: true }))}">Cancelar</ac-button>
+            <ac-button variant="primary" @click="${() => { this._step = 'credentials'; }}">Continuar</ac-button>
+          </div>
+        </div>
+      `;
+    }
+
     if (this._step === 'credentials' && this._selected) {
       return html`
         ${!this.prefillPlatform ? html`
           <div class="back">
-            <ac-button variant="ghost" @click="${() => { this._step = 'select'; this._formError = ''; }}">← Volver</ac-button>
+            <ac-button variant="ghost" @click="${() => { this._step = 'name'; this._formError = ''; }}">← Volver</ac-button>
           </div>
         ` : ''}
         <ac-credential-form

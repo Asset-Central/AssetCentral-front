@@ -11,11 +11,12 @@ export async function fetchAccounts(): Promise<Account[]> {
 
 export async function linkAccount(
   platform: string,
+  nombre: string,
   credentials: Record<string, string>
 ): Promise<Account> {
   const res = await apiFetch(BASE, {
     method: 'POST',
-    body: JSON.stringify({ platform, credentials }),
+    body: JSON.stringify({ platform, nombre, credentials }),
   });
   if (res.status === 422) {
     const body = await res.json().catch(() => ({}));
