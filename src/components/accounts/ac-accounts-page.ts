@@ -28,15 +28,27 @@ export class AcAccountsPage extends LitElement {
 
   @state() private _showWizard = false;
   @state() private _reconnectPlatform?: string;
+  @state() private _pendingUnlink?: Account;
+  @state() private _unlinking = false;
 
   private _refresh() {
     window.dispatchEvent(new CustomEvent('ac-data-refresh'));
   }
 
-  private async _unlink(e: CustomEvent) {
-    const account: Account = e.detail;
-    await unlinkAccount(account.id);
-    this._refresh();
+  private _unlink(e: CustomEvent) {
+    this._pendingUnlink = e.detail as Account;
+  }
+
+  private async _confirmUnlink() {
+    if (!this._pendingUnlink) return;
+    this._unlinking = true;
+    try {
+      await unlinkAccount(this._pendingUnlink.id);
+      this._pendingUnlink = undefined;
+      this._refresh();
+    } finally {
+      this._unlinking = false;
+    }
   }
 
   private _onAccountLinked() {
@@ -95,6 +107,23 @@ export class AcAccountsPage extends LitElement {
           @ac-account-linked="${this._onAccountLinked}"
           @ac-cancel="${this._closeWizard}"
         ></ac-link-wizard>
+      </ac-modal>
+
+      <ac-modal
+        .open="${!!this._pendingUnlink}"
+        title="Desvincular cuenta"
+        @ac-modal-close="${() => { if (!this._unlinking) this._pendingUnlink = undefined; }}"
+      >
+        <p style="margin: 0 0 var(--space-5); color: var(--color-text-muted); font-size: var(--text-sm);">
+          ¿Estás seguro que querés desvincular <strong style="color: var(--color-text);">${this._pendingUnlink?.label ?? this._pendingUnlink?.platform}</strong>?
+          Esta acción eliminará las credenciales guardadas.
+        </p>
+        <div style="display: flex; justify-content: flex-end; gap: var(--space-3);">
+          <ac-button variant="ghost" ?disabled="${this._unlinking}" @click="${() => this._pendingUnlink = undefined}">Cancelar</ac-button>
+          <ac-button variant="danger" ?disabled="${this._unlinking}" @click="${this._confirmUnlink}">
+            ${this._unlinking ? 'Desvinculando…' : 'Sí, desvincular'}
+          </ac-button>
+        </div>
       </ac-modal>
     `;
   }
