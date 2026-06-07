@@ -10,7 +10,7 @@ import './ac-favorite-card';
 import '@/components/common/ac-empty-state';
 import '@/components/common/ac-spinner';
 
-const ALL_TYPES: AssetType[] = ['cedear', 'bono', 'fci', 'cash', 'crypto', 'stock'];
+const ALL_TYPES: AssetType[] = ['cedear', 'bono', 'fci', 'cash', 'crypto', 'stock', 'caucion'];
 type Range = '1h' | '1d' | '1w' | '30d' | '1y';
 const RANGE_LABELS: Record<Range, string> = { '1h': '1H', '1d': '1D', '1w': '1S', '30d': '1M', '1y': '1A' };
 type FilterMode = AssetType | 'favoritos' | null;

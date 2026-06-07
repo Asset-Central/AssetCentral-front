@@ -15,12 +15,13 @@ export class AcAssetTypeBadge extends LitElement {
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
-    .cedear { background: color-mix(in srgb, #818cf8 20%, transparent); color: #818cf8; }
-    .bono   { background: color-mix(in srgb, #34d399 20%, transparent); color: #34d399; }
-    .fci    { background: color-mix(in srgb, #fb923c 20%, transparent); color: #fb923c; }
-    .cash   { background: color-mix(in srgb, #facc15 20%, transparent); color: #facc15; }
-    .stock  { background: color-mix(in srgb, #f472b6 20%, transparent); color: #f472b6; }
-    .crypto { background: color-mix(in srgb, #60a5fa 20%, transparent); color: #60a5fa; }
+    .cedear  { background: color-mix(in srgb, #818cf8 20%, transparent); color: #818cf8; }
+    .bono    { background: color-mix(in srgb, #34d399 20%, transparent); color: #34d399; }
+    .fci     { background: color-mix(in srgb, #fb923c 20%, transparent); color: #fb923c; }
+    .cash    { background: color-mix(in srgb, #facc15 20%, transparent); color: #facc15; }
+    .stock   { background: color-mix(in srgb, #f472b6 20%, transparent); color: #f472b6; }
+    .crypto  { background: color-mix(in srgb, #60a5fa 20%, transparent); color: #60a5fa; }
+    .caucion { background: color-mix(in srgb, #a78bfa 20%, transparent); color: #a78bfa; }
   `;
 
   @property() type: AssetType = 'stock';

@@ -1,6 +1,6 @@
 import type { Platform } from './account';
 
-export type AssetType = 'cedear' | 'bono' | 'fci' | 'cash' | 'crypto' | 'stock';
+export type AssetType = 'cedear' | 'bono' | 'fci' | 'cash' | 'crypto' | 'stock' | 'caucion';
 
 export type Currency = 'ARS' | 'USD';
 

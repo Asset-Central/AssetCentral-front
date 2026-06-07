@@ -29,7 +29,7 @@ function tileColor(pct: number | undefined): string {
 
 const TYPE_LABEL: Record<AssetType, string> = {
   cedear: 'CEDEAR', bono: 'Bono', fci: 'FCI',
-  cash: 'Efectivo', stock: 'Acción', crypto: 'Cripto',
+  cash: 'Efectivo', stock: 'Acción', crypto: 'Cripto', caucion: 'Caución',
 };
 
 const PORTFOLIO_COLORS = ['#818cf8', '#fb923c', '#34d399', '#f472b6', '#60a5fa', '#fbbf24'];
