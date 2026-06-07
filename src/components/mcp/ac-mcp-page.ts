@@ -283,18 +283,19 @@ export class AcMcpPage extends LitElement {
         <div class="code-block"><span class="punct">{</span>
   <span class="key">"mcpServers"</span><span class="punct">:</span> <span class="punct">{</span>
     <span class="key">"assetcentral"</span><span class="punct">:</span> <span class="punct">{</span>
-      <span class="key">"type"</span><span class="punct">:</span> <span class="str">"http"</span><span class="punct">,</span>
-      <span class="key">"url"</span><span class="punct">:</span>  <span class="str">"${this._mcpUrl}"</span>
+      <span class="key">"type"</span><span class="punct">:</span>    <span class="str">"http"</span><span class="punct">,</span>
+      <span class="key">"url"</span><span class="punct">:</span>     <span class="str">"${this._mcpUrl}"</span><span class="punct">,</span>
+      <span class="key">"headers"</span><span class="punct">:</span> <span class="punct">{</span> <span class="key">"Authorization"</span><span class="punct">:</span> <span class="str">"Bearer ${this._token.length > 40 ? this._token.slice(0, 40) + '...' : this._token}"</span> <span class="punct">}</span>
     <span class="punct">}</span>
   <span class="punct">}</span>
 <span class="punct">}</span></div>
-        <button class="copy-btn" style="margin-top:var(--space-2)" @click="${() => this._copy(`{\n  "mcpServers": {\n    "assetcentral": {\n      "type": "http",\n      "url": "${this._mcpUrl}"\n    }\n  }\n}`)}">
-          Copiar configuración
+        <button class="copy-btn" style="margin-top:var(--space-2)" @click="${() => this._copy(`{\n  "mcpServers": {\n    "assetcentral": {\n      "type": "http",\n      "url": "${this._mcpUrl}",\n      "headers": { "Authorization": "Bearer ${this._token}" }\n    }\n  }\n}`)}">
+          Copiar configuración completa
         </button>
 
         <p>
-          La autenticación es automática vía OAuth: la primera vez que conectes, Claude Code
-          abrirá el navegador para que autorices el acceso. La sesión se renueva sola.
+          El token JWT es válido por 1 hora. Cuando vence, Claude Code abrirá el navegador
+          automáticamente para renovar la sesión vía OAuth.
         </p>
       </div>
 
