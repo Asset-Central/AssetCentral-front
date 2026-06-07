@@ -88,6 +88,8 @@ export class AcTreemap extends LitElement {
     .tip-ticker { font-weight: 700; font-size: 13px; color: #f9fafb; }
     .tip-type { color: #9ca3af; font-size: 11px; }
     .tip-price { font-family: monospace; color: #d1fae5; }
+    .tip-total { font-family: monospace; font-size: 13px; font-weight: 700; color: #f9fafb; }
+    .tip-qty   { font-size: 11px; color: #9ca3af; }
     .tip-change-up   { color: #34d399; font-family: monospace; font-size: 11px; }
     .tip-change-down { color: #f87171; font-family: monospace; font-size: 11px; }
     .tip-portfolios { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
@@ -206,7 +208,12 @@ export class AcTreemap extends LitElement {
           <div class="tip" style="left:${tip.x}px;top:${tip.y}px">
             <div class="tip-ticker">${tip.asset.ticker}</div>
             <div class="tip-type">${TYPE_LABEL[tip.asset.asset_type as AssetType] ?? tip.asset.asset_type ?? ''}</div>
-            ${tip.asset.unit_price != null ? html`
+            ${tip.asset.total_valuation != null ? html`
+              <div class="tip-total">${tip.asset.currency ?? ''} ${fmt.format(tip.asset.total_valuation)}</div>
+            ` : ''}
+            ${tip.asset.quantity != null ? html`
+              <div class="tip-qty">${fmt.format(tip.asset.quantity)} unidades · ${tip.asset.currency ?? ''} ${tip.asset.unit_price != null ? fmt.format(tip.asset.unit_price) : '—'} c/u</div>
+            ` : tip.asset.unit_price != null ? html`
               <div class="tip-price">${tip.asset.currency ?? ''} ${fmt.format(tip.asset.unit_price)}</div>
             ` : ''}
             ${tip.asset.daily_change_pct != null ? html`

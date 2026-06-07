@@ -19,7 +19,13 @@ export class AcDashboard extends LitElement {
     h1 {
       font-size: var(--text-2xl);
       font-weight: 700;
-      margin-bottom: var(--space-6);
+      margin-bottom: var(--space-4);
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
     }
 
     .layout {
@@ -54,34 +60,35 @@ export class AcDashboard extends LitElement {
     return html`
       <h1>Dashboard</h1>
 
-      <ac-total-valuation
-        .totalArs="${this._app?.totalArs ?? 0}"
-        .totalUsd="${this._app?.totalUsd ?? 0}"
-        style="margin-bottom: var(--space-4);"
-      ></ac-total-valuation>
+      <div class="stack">
+        <ac-total-valuation
+          .totalArs="${this._app?.totalArs ?? 0}"
+          .totalUsd="${this._app?.totalUsd ?? 0}"
+        ></ac-total-valuation>
 
-      <div class="layout">
-        <!-- Main column: treemap -->
-        <div class="main">
-          <ac-treemap
-            .assets="${this._app?.assets ?? []}"
-            .portfolios="${this._app?.portfolios ?? []}"
-          ></ac-treemap>
+        <div class="layout">
+          <!-- Main column: treemap -->
+          <div class="main">
+            <ac-treemap
+              .assets="${this._app?.assets ?? []}"
+              .portfolios="${this._app?.portfolios ?? []}"
+            ></ac-treemap>
+          </div>
+
+          <!-- Sidebar: distribution + daily badge -->
+          <div class="sidebar">
+            <ac-distribution-chart
+              .assets="${this._app?.assets ?? []}"
+            ></ac-distribution-chart>
+
+            <ac-performance-badge
+              .assets="${this._app?.assets ?? []}"
+            ></ac-performance-badge>
+          </div>
         </div>
 
-        <!-- Sidebar: distribution + daily badge -->
-        <div class="sidebar">
-          <ac-distribution-chart
-            .assets="${this._app?.assets ?? []}"
-          ></ac-distribution-chart>
-
-          <ac-performance-badge
-            .assets="${this._app?.assets ?? []}"
-          ></ac-performance-badge>
-        </div>
+        <ac-performance-chart></ac-performance-chart>
       </div>
-
-      <ac-performance-chart style="margin-top: var(--space-4);"></ac-performance-chart>
     `;
   }
 }
