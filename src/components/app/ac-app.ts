@@ -5,7 +5,7 @@ import { Router } from '@vaadin/router';
 import { appContext, initialState, type AppState } from '@/store/app.context';
 import { supabase } from '@/lib/supabase';
 import { profileIsComplete } from '@/services/auth.service';
-import { fetchAssets } from '@/services/asset.service';
+import { fetchAssets, fetchUsdRate } from '@/services/asset.service';
 import { fetchAccounts } from '@/services/account.service';
 import { fetchPortfolios } from '@/services/portfolio.service';
 
@@ -220,11 +220,13 @@ export class AcApp extends LitElement {
   private async _loadData() {
     this._state = { ...this._state, isLoading: true, error: null };
     try {
-      const [assets, accounts, portfolios] = await Promise.all([
-        fetchAssets(), fetchAccounts(), fetchPortfolios(),
+      const [assets, accounts, portfolios, usdRate] = await Promise.all([
+        fetchAssets(), fetchAccounts(), fetchPortfolios(), fetchUsdRate(),
       ]);
-      const totalArs = assets.filter(a => a.currency === 'ARS').reduce((s, a) => s + (a.total_valuation ?? 0), 0);
-      const totalUsd = assets.filter(a => a.currency === 'USD').reduce((s, a) => s + (a.total_valuation ?? 0), 0);
+      const arsSum = assets.filter(a => a.currency === 'ARS').reduce((s, a) => s + (a.total_valuation ?? 0), 0);
+      const usdSum = assets.filter(a => a.currency === 'USD').reduce((s, a) => s + (a.total_valuation ?? 0), 0);
+      const totalArs = arsSum + usdSum * usdRate;
+      const totalUsd = totalArs / usdRate;
       this._state = { ...this._state, assets, accounts, portfolios, totalArs, totalUsd, isLoading: false, error: null };
     } catch (err) {
       this._state = { ...this._state, isLoading: false, error: err instanceof Error ? err.message : 'Error desconocido' };

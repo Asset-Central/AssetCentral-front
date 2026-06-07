@@ -33,6 +33,13 @@ export async function fetchInflation(currency: string): Promise<InflationPoint[]
   return res.json();
 }
 
+export async function fetchUsdRate(): Promise<number> {
+  const res = await apiFetch(`${BASE}/usd-rate`);
+  if (!res.ok) return 1000;
+  const { rate } = await res.json();
+  return rate as number;
+}
+
 export function groupByType(assets: Asset[]): AssetGroup[] {
   const totalAll = assets.reduce((sum, a) => sum + (a.total_valuation ?? 0), 0);
 
