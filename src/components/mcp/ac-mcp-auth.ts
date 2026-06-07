@@ -55,10 +55,10 @@ export class AcMcpAuth extends LitElement {
 
   private async _tryAutoAuth() {
     const { data } = await supabase.auth.getSession();
-    const jwt = data.session?.access_token;
-    if (jwt) {
+    const session = data.session;
+    if (session?.access_token) {
       this._status = '✓ Sesión encontrada';
-      await this._authorize(jwt);
+      await this._authorize(session.access_token, session.refresh_token ?? '');
     } else {
       this._status = 'No se encontró sesión activa. Iniciá sesión en AssetCentral primero.';
       this._isError = true;
@@ -66,14 +66,14 @@ export class AcMcpAuth extends LitElement {
     }
   }
 
-  private async _authorize(jwt: string) {
+  private async _authorize(jwt: string, refreshToken = '') {
     this._status = 'Autorizando...';
     this._isError = false;
     try {
       const resp = await fetch(`${BACKEND}/oauth/code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jwt }),
+        body: JSON.stringify({ jwt, refresh_token: refreshToken }),
       });
       const data = await resp.json();
       if (!data.code) throw new Error('No se recibió código');
@@ -104,7 +104,7 @@ export class AcMcpAuth extends LitElement {
             @input="${(e: InputEvent) => (this._manualJwt = (e.target as HTMLTextAreaElement).value)}"
           ></textarea>
           <br>
-          <button @click="${() => this._authorize(this._manualJwt.trim())}">Autorizar</button>
+          <button @click="${() => this._authorize(this._manualJwt.trim(), '')}">Autorizar</button>
           <div class="hint">
             Podés obtener tu JWT desde la página MCP de AssetCentral → "Copiar configuración completa"
           </div>
