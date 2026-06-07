@@ -237,7 +237,7 @@ export class AcAssetCard extends LitElement {
         const currency = this.asset.ticker === 'USDT' ? 'USD' : 'ARS';
         const inf: InflationPoint[] = await fetchInflation(currency);
         // Map global range → number of months of inflation data to show
-        const monthsMap: Record<string, number> = { '1h': 3, '1d': 3, '1w': 3, '30d': 12, '1y': inf.length };
+        const monthsMap: Record<string, number> = { '1h': 3, '1d': 3, '1w': 6, '30d': 12, '1y': inf.length };
         const months = monthsMap[this._activeRange] ?? 12;
         const sliced = inf.slice(-months);
         this._history = sliced.map(p => ({
@@ -421,16 +421,14 @@ export class AcAssetCard extends LitElement {
               ${isLocal ? html`
                 <span class="local-badge" @click="${this._resetToGlobal}" title="Volver al rango global">↺ global</span>
               ` : ''}
-              ${this._isCash ? '' : html`
-                <div class="range-btns">
-                  ${ranges.map(r => html`
-                    <button
-                      class="range-btn ${active === r ? 'active' : ''} ${active === r && isLocal ? 'local' : ''}"
-                      @click="${(e: Event) => this._setRange(e, r)}"
-                    >${RANGE_LABELS[r]}</button>
-                  `)}
-                </div>
-              `}
+              <div class="range-btns">
+                ${ranges.map(r => html`
+                  <button
+                    class="range-btn ${active === r ? 'active' : ''} ${active === r && isLocal ? 'local' : ''}"
+                    @click="${(e: Event) => this._setRange(e, r)}"
+                  >${RANGE_LABELS[r]}</button>
+                `)}
+              </div>
             </div>
           </div>
           ${this._chartLoading

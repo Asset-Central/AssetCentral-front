@@ -1,4 +1,4 @@
-export type Platform = 'cocos' | 'iol' | 'mercadopago' | 'nacion';
+export type Platform = 'cocos' | 'iol' | 'mercadopago' | 'nacion' | 'binance';
 
 export type ConnectionStatus = 'active' | 'requires_reauthentication' | 'error';
 
