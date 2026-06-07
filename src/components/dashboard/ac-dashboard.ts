@@ -54,6 +54,12 @@ export class AcDashboard extends LitElement {
     return html`
       <h1>Dashboard</h1>
 
+      <ac-total-valuation
+        .totalArs="${this._app?.totalArs ?? 0}"
+        .totalUsd="${this._app?.totalUsd ?? 0}"
+        style="margin-bottom: var(--space-4);"
+      ></ac-total-valuation>
+
       <div class="layout">
         <!-- Main column: treemap + performance chart -->
         <div class="main">
@@ -65,13 +71,8 @@ export class AcDashboard extends LitElement {
           <ac-performance-chart></ac-performance-chart>
         </div>
 
-        <!-- Sidebar: valuation + distribution + daily badge -->
+        <!-- Sidebar: distribution + daily badge -->
         <div class="sidebar">
-          <ac-total-valuation
-            .totalArs="${this._app?.totalArs ?? 0}"
-            .totalUsd="${this._app?.totalUsd ?? 0}"
-          ></ac-total-valuation>
-
           <ac-distribution-chart
             .assets="${this._app?.assets ?? []}"
           ></ac-distribution-chart>
