@@ -4,7 +4,9 @@ import { customElement, property } from 'lit/decorators.js';
 @customElement('ac-total-valuation')
 export class AcTotalValuation extends LitElement {
   static styles = css`
-    :host {
+    :host { display: block; }
+
+    .card {
       display: flex;
       align-items: center;
       gap: var(--space-6);
@@ -57,7 +59,7 @@ export class AcTotalValuation extends LitElement {
     }
 
     @media (max-width: 600px) {
-      :host { padding: var(--space-3) var(--space-4); gap: var(--space-4); }
+      .card { padding: var(--space-3) var(--space-4); gap: var(--space-4); }
       .amount-ars { font-size: var(--text-2xl); }
     }
   `;
@@ -75,11 +77,13 @@ export class AcTotalValuation extends LitElement {
 
   render() {
     return html`
-      <div class="label">Valuación total</div>
-      <div class="divider"></div>
-      <div class="amounts">
-        <span class="amount-ars">${this._fmt(this.totalArs, 'ARS')}</span>
-        <span class="amount-usd">≈ ${this._fmt(this.totalUsd, 'USD')}</span>
+      <div class="card">
+        <div class="label">Valuación total</div>
+        <div class="divider"></div>
+        <div class="amounts">
+          <span class="amount-ars">${this._fmt(this.totalArs, 'ARS')}</span>
+          <span class="amount-usd">≈ ${this._fmt(this.totalUsd, 'USD')}</span>
+        </div>
       </div>
     `;
   }

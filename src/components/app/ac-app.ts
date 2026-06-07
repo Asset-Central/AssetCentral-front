@@ -27,13 +27,14 @@ import '@/components/common/ac-spinner';
 @customElement('ac-app')
 export class AcApp extends LitElement {
   static styles = css`
-    :host { display: flex; height: 100%; }
-    .shell { display: flex; width: 100%; height: 100%; }
-    .content { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    :host { display: flex; height: 100vh; max-height: 100vh; overflow: hidden; }
+    .shell { display: flex; width: 100%; height: 100%; overflow: hidden; }
+    .content { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
 
     /* ── Nav drawer ── */
     .nav-drawer {
       flex-shrink: 0;
+      height: 100%;
       overflow: hidden;
       transition: width 0.25s ease;
       width: var(--nav-width, 220px);

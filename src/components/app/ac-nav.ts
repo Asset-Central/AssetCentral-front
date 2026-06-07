@@ -28,11 +28,14 @@ export class AcNav extends LitElement {
       display: flex;
       flex-direction: column;
       width: var(--nav-width);
-      min-height: 100%;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
       background: var(--color-surface);
       border-right: 1px solid var(--color-border);
       padding: var(--space-6) 0;
       flex-shrink: 0;
+      box-sizing: border-box;
     }
 
     /* Logo — explicit hover without background box */
